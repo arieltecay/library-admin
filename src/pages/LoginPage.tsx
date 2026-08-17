@@ -128,23 +128,10 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="my-5 flex items-center gap-3 text-sm text-neutral-500">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <span>o</span>
-            <div className="flex-1 h-px bg-neutral-200" />
-          </div>
-
-          <button
-            onClick={handleQuickAccess}
-            className="w-full py-2.5 rounded-xl border border-primary-600 text-primary-600 font-semibold hover:bg-primary-50 transition-colors"
-          >
-            Acceso rápido: Admin Demo
-          </button>
         </div>
 
         <p className="text-center text-xs text-neutral-400">
-          © 2025 Library System · v1.0.0
+          © 2026 Library System · v1.0.0
         </p>
         <p className="mt-1 text-center text-xs text-neutral-500">
           ¿Problemas para acceder? Contactá al administrador del sistema.
