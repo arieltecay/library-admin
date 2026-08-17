@@ -28,19 +28,6 @@ export default function LoginPage() {
     }
   }
 
-  function handleQuickAccess() {
-    const quickEmail = "admin@library.com";
-    const quickPass = "admin123";
-    setEmail(quickEmail);
-    setPassword(quickPass);
-    setShowPassword(true);
-    setTimeout(() => {
-      login(quickEmail, quickPass)
-        .then(() => navigate("/dashboard"))
-        .catch((err: any) => setError(err.response?.data?.message || "Error al iniciar sesión"));
-    }, 100);
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-800 relative overflow-hidden">
       <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary-700/10 rounded-full blur-3xl" />
