@@ -51,27 +51,27 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
           <div className="divide-y divide-neutral-100">
             <Row
               label="Apertura"
-              value={`$${summary.totalOpening.toLocaleString("es-AR")}`}
+              value={`$${(summary.totalOpening ?? 0).toLocaleString("es-AR")}`}
             />
             <Row
               label="Ventas efectivo"
-              value={`+$${summary.cashSales.toLocaleString("es-AR")}`}
+              value={`+$${(summary.cashSales ?? 0).toLocaleString("es-AR")}`}
               valueClass="text-green-600"
             />
             <Row
               label="Devoluciones"
-              value={summary.returns > 0 ? `-$${summary.returns.toLocaleString("es-AR")}` : "$0"}
-              valueClass={summary.returns > 0 ? "text-red-500" : "text-neutral-600"}
+              value={(summary.returns ?? 0) > 0 ? `-$${(summary.returns ?? 0).toLocaleString("es-AR")}` : "$0"}
+              valueClass={(summary.returns ?? 0) > 0 ? "text-red-500" : "text-neutral-600"}
             />
             <Row
               label="Pagos créditos"
-              value={summary.creditPayments > 0 ? `+$${summary.creditPayments.toLocaleString("es-AR")}` : "$0"}
-              valueClass={summary.creditPayments > 0 ? "text-green-600" : "text-neutral-600"}
+              value={(summary.creditPayments ?? 0) > 0 ? `+$${(summary.creditPayments ?? 0).toLocaleString("es-AR")}` : "$0"}
+              valueClass={(summary.creditPayments ?? 0) > 0 ? "text-green-600" : "text-neutral-600"}
             />
             <div className="flex items-center justify-between py-3 mt-1">
               <span className="text-sm font-bold text-neutral-800 uppercase tracking-wide">Total Esperado</span>
               <span className="text-lg font-bold text-blue-600">
-                ${summary.totalExpected.toLocaleString("es-AR")}
+                ${(summary.totalExpected ?? 0).toLocaleString("es-AR")}
               </span>
             </div>
           </div>
@@ -80,21 +80,21 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
           <div className="divide-y divide-neutral-100">
             <Row
               label="Conteo final"
-              value={`$${summary.finalCount.toLocaleString("es-AR")}`}
+              value={`$${(summary.finalCount ?? 0).toLocaleString("es-AR")}`}
             />
             <Row
               label="Diferencia"
               value={
                 hasDiff
-                  ? `${summary.difference > 0 ? "+" : ""}$${summary.difference.toLocaleString("es-AR")}`
+                  ? `${(summary.difference ?? 0) > 0 ? "+" : ""}$${(summary.difference ?? 0).toLocaleString("es-AR")}`
                   : "$0"
               }
               valueClass={hasDiff ? "text-red-500" : "text-green-600"}
             />
             <Row
               label="Turnos con diferencia"
-              value={`${summary.shiftsWithDifference} de ${summary.totalShifts}`}
-              valueClass={summary.shiftsWithDifference > 0 ? "text-amber-600" : "text-neutral-800"}
+              value={`${(summary.shiftsWithDifference ?? 0)} de ${(summary.totalShifts ?? 0)}`}
+              valueClass={(summary.shiftsWithDifference ?? 0) > 0 ? "text-amber-600" : "text-neutral-800"}
             />
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-neutral-600">Turnos pendientes</span>

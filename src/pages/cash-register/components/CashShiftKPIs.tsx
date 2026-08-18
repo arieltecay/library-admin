@@ -56,22 +56,22 @@ export default function CashShiftKPIs({ summary, loading }: CashShiftKPIsProps) 
     <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
       <KPICard
         label="Efectivo en Caja"
-        value={`$${summary.finalCount.toLocaleString("es-AR")}`}
-        sub={`esperado $${summary.totalExpected.toLocaleString("es-AR")}`}
+        value={`$${(summary.finalCount ?? 0).toLocaleString("es-AR")}`}
+        sub={`esperado $${(summary.totalExpected ?? 0).toLocaleString("es-AR")}`}
         icon="payments"
         iconColor="bg-green-500"
         valueClass="text-green-600"
       />
       <KPICard
         label="Ventas Efectivo"
-        value={`$${summary.cashSales.toLocaleString("es-AR")}`}
+        value={`$${(summary.cashSales ?? 0).toLocaleString("es-AR")}`}
         sub={`${summary.totalShifts > 0 ? `${summary.totalShifts * 40} transacciones` : "Sin ventas"}`}
         icon="receipt"
         iconColor="bg-amber-500"
       />
       <KPICard
         label="Ventas por Transferencias"
-        value={`$${summary.transferSales.toLocaleString("es-AR")}`}
+        value={`$${(summary.transferSales ?? 0).toLocaleString("es-AR")}`}
         sub={`${summary.totalShifts > 0 ? "transacciones digitales" : "Sin ventas"}`}
         icon="account_balance"
         iconColor="bg-blue-500"

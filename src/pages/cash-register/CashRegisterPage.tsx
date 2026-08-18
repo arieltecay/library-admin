@@ -33,8 +33,8 @@ function StatusBadge({ status, difference }: { status: "open" | "closed"; differ
 }
 
 function DiffCell({ value }: { value?: number }) {
-  if (value === undefined || value === null) return <span className="text-neutral-400">—</span>;
-  if (value === 0)
+  const v = value ?? 0;
+  if (v === 0)
     return (
       <span className="text-green-600 font-semibold flex items-center gap-1">
         $0 <span className="material-icons text-base">check_circle</span>
@@ -42,7 +42,7 @@ function DiffCell({ value }: { value?: number }) {
     );
   return (
     <span className="text-red-500 font-semibold flex items-center gap-1">
-      {value > 0 ? "+" : ""}${value.toLocaleString("es-AR")}
+      {v > 0 ? "+" : ""}${v.toLocaleString("es-AR")}
       <span className="material-icons text-base">cancel</span>
     </span>
   );
