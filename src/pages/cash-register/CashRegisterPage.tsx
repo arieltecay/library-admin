@@ -9,8 +9,9 @@ import {
 import { exportToCSV } from "../../lib/exportToCSV";
 import CashShiftKPIs from "./components/CashShiftKPIs";
 import DailySummaryBlock from "./components/DailySummaryBlock";
+import CashMovementsTab from "./components/CashMovementsTab";
 
-type TabFilter = "all" | "closed" | "open" | "difference";
+type TabFilter = "all" | "closed" | "open" | "difference" | "movements";
 
 function StatusBadge({ status, difference }: { status: "open" | "closed"; difference?: number }) {
   if (status === "open")
@@ -59,6 +60,7 @@ export default function CashRegisterPage() {
   const [loadingShifts, setLoadingShifts] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [activeTab, setActiveTab] = useState<TabFilter>("closed");
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const [params, setParams] = useState<ListCashShiftsParams>({ limit: 50, sortOrder: "desc" });
 
   const fetchData = useCallback(async () => {
@@ -105,6 +107,7 @@ export default function CashRegisterPage() {
     { id: "closed", label: "Cerrados" },
     { id: "open", label: "Abiertos" },
     { id: "difference", label: "Con diferencia" },
+    { id: "movements", label: "Movimientos" },
   ];
 
   return (
@@ -242,7 +245,10 @@ export default function CashRegisterPage() {
                       <DiffCell value={shift.difference} />
                     </td>
                     <td className="px-5 py-4">
-                      <button className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors">
+                      <button
+                        onClick={() => setSelectedShiftId(shift.id)}
+                        className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
+                      >
                         <span className="material-icons text-base">visibility</span>
                       </button>
                     </td>
@@ -254,15 +260,20 @@ export default function CashRegisterPage() {
         </div>
 
         {/* Footer */}
-        {!loadingShifts && shifts.length > 0 && (
+        {!loadingShifts && shifts.length > 0 && activeTab !== "movements" && (
           <div className="px-6 py-3 border-t border-neutral-100 text-xs text-neutral-500">
             Mostrando 1-{shifts.length} de {shifts.length} turnos
           </div>
         )}
       </div>
 
+      {/* Movimientos Tab */}
+      {activeTab === "movements" && (
+        <CashMovementsTab cashShiftId={selectedShiftId || undefined} />
+      )}
+
       {/* Resumen diario */}
-      {summary && (
+      {summary && activeTab !== "movements" && (
         <DailySummaryBlock summary={summary} loading={loadingSummary} />
       )}
     </div>
