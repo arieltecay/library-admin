@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../api/client";
 import { useToast } from "../hooks/useToast";
 import Modal from "./Modal";
@@ -26,20 +26,41 @@ interface CreateProductModalProps {
   };
 }
 
+const EMPTY_FORM: CreateProductForm = {
+  name: "",
+  type: "product",
+  price: 0,
+  stock: 0,
+  minStock: undefined,
+};
+
 export default function CreateProductModal({ isOpen, onClose, onSuccess, initialData }: CreateProductModalProps) {
-  const [form, setForm] = useState<CreateProductForm>({
-    name: initialData?.name ?? "",
-    type: initialData?.type ?? "product",
-    price: initialData?.price ?? 0,
-    stock: initialData?.stock ?? 0,
-    minStock: initialData?.minStock,
-  });
+  const [form, setForm] = useState<CreateProductForm>(EMPTY_FORM);
   const [typeOptions] = useState<{ label: string; value: ProductType }[]>([
     { label: "Producto", value: "product" },
     { label: "Servicio", value: "service" },
   ]);
   const { success, error: showError } = useToast();
   const [submitting, setSubmitting] = useState(false);
+
+  // Reset form when modal opens/closes or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setForm({
+          name: initialData.name,
+          type: initialData.type,
+          price: initialData.price,
+          stock: initialData.stock,
+          minStock: initialData.minStock,
+        });
+      } else {
+        setForm(EMPTY_FORM);
+      }
+    } else {
+      setForm(EMPTY_FORM);
+    }
+  }, [isOpen, initialData]);
 
   function handleChange(field: keyof CreateProductForm, value: string | number | undefined) {
     setForm({ ...form, [field]: value });
