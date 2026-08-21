@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../../api/client";
 import PageHeader from "../../components/PageHeader";
 import Modal from "../../components/Modal";
@@ -46,23 +46,32 @@ export default function ProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Product | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    void lowStockOnly; // filter is applied in fetch params
-    api
-      .get("/products", { params: { active: true, type: "product", limit: 1 } })
-      .then((r) => setProductCount(r.data.total))
-      .catch(() => setProductCount(0));
-    api
-      .get("/products", { params: { active: true, type: "service", limit: 1 } })
-      .then((r) => setServiceCount(r.data.total))
-      .catch(() => setServiceCount(0));
-    api
-      .get("/products", { params: { active: true, lowStock: true, limit: 1 } })
-      .then((r) => setLowStockCount(r.data.total))
-      .catch(() => setLowStockCount(0));
+  // Fetch summary counts - reusable function
+  const fetchSummaryCounts = useCallback(async () => {
+    try {
+      const [productsRes, servicesRes, lowStockRes] = await Promise.all([
+        api.get("/products", { params: { active: true, type: "product", limit: 1 } }),
+        api.get("/products", { params: { active: true, type: "service", limit: 1 } }),
+        api.get("/products", { params: { active: true, lowStock: true, limit: 1 } }),
+      ]);
+      setProductCount(productsRes.data.total);
+      setServiceCount(servicesRes.data.total);
+      setLowStockCount(lowStockRes.data.total);
+    } catch {
+      setProductCount(0);
+      setServiceCount(0);
+      setLowStockCount(0);
+    }
   }, []);
 
+  // Fetch summary counts on mount and when refreshTrigger changes
+  useEffect(() => {
+    fetchSummaryCounts();
+  }, [fetchSummaryCounts, refreshTrigger]);
+
+  // Fetch products list
   useEffect(() => {
     const params: Record<string, unknown> = {
       active: true,
@@ -128,6 +137,7 @@ export default function ProductsPage() {
         next.delete(product.id);
         return next;
       });
+      setRefreshTrigger((t) => t + 1); // Refresh summary counts
     } catch (err: any) {
       setError(err.response?.data?.message || "Error al eliminar el producto");
     } finally {
@@ -160,6 +170,7 @@ export default function ProductsPage() {
         onClose={() => setCreateModalOpen(false)}
         onSuccess={() => {
           setPage(1);
+          setRefreshTrigger((t) => t + 1); // Refresh summary counts
           setCreateModalOpen(false);
         }}
       />
@@ -176,6 +187,7 @@ export default function ProductsPage() {
             onClose={() => setEditTarget(null)}
             onSuccess={() => {
               setPage(1);
+              setRefreshTrigger((t) => t + 1); // Refresh summary counts
               setEditTarget(null);
             }}
             initialData={editTarget}
