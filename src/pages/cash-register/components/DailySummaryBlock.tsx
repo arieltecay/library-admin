@@ -1,4 +1,5 @@
 import type { DailySummary } from "../../../api/cashShiftsService";
+import { formatPercent } from "../../../lib/profit";
 
 interface DailySummaryBlockProps {
   summary: DailySummary;
@@ -57,6 +58,21 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               label="Ventas efectivo"
               value={`+$${(summary.cashSales ?? 0).toLocaleString("es-AR")}`}
               valueClass="text-green-600"
+            />
+            <Row
+              label="Costo de venta (COGS)"
+              value={`-$${(summary.cogs ?? 0).toLocaleString("es-AR")}`}
+              valueClass="text-neutral-600"
+            />
+            <Row
+              label="Ganancia bruta"
+              value={`+$${(summary.grossProfit ?? 0).toLocaleString("es-AR")}`}
+              valueClass={(summary.grossProfit ?? 0) < 0 ? "text-red-500" : "text-green-600"}
+            />
+            <Row
+              label="Margen bruto"
+              value={formatPercent(summary.grossMarginPercent ?? null)}
+              valueClass="text-neutral-800"
             />
             <Row
               label="Devoluciones"

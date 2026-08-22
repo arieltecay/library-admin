@@ -35,6 +35,10 @@ export interface DailySummary {
   shiftsWithDifference: number;
   totalShifts: number;
   pendingShifts: Array<{ sellerName: string; id: string }>;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number | null;
 }
 
 export interface ListCashShiftsParams {

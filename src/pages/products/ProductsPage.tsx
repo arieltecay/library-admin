@@ -4,6 +4,7 @@ import PageHeader from "../../components/PageHeader";
 import Modal from "../../components/Modal";
 import CreateProductModal from "../../components/CreateProductModal";
 import { money } from "../../lib/format";
+import { unitMarginPercent, formatPercent } from "../../lib/profit";
 import type { Product, ProductListResponse } from "../../api/types";
 
 type TypeFilter = "all" | "product" | "service";
@@ -254,6 +255,7 @@ export default function ProductsPage() {
               <th className="px-3 py-2 text-left">Tipo</th>
               <th className="px-3 py-2 text-right">Precio</th>
               <th className="px-3 py-2 text-right">Costo</th>
+              <th className="px-3 py-2 text-right">Margen</th>
               <th className="px-3 py-2 text-right">Stock</th>
               <th className="px-3 py-2 center">Acciones</th>
             </tr>
@@ -279,6 +281,15 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-3 py-3 text-right">{money(p.price)}</td>
                   <td className="px-3 py-3 text-right">{p.cost ? money(p.cost) : "—"}</td>
+                  <td className="px-3 py-3 text-right">
+                    {p.cost !== undefined && p.cost > 0 ? (
+                      <span className="text-sm text-neutral-600">
+                        {formatPercent(unitMarginPercent(p.price, p.cost))}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
+                  </td>
                   <td className="px-3 py-3 text-right font-medium">{s.text}</td>
                   <td className="px-3 py-3 text-center">
                     <button
@@ -301,7 +312,7 @@ export default function ProductsPage() {
             })}
             {products.length === 0 && !loading && (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-neutral-400 text-sm">
+                <td colSpan={8} className="py-8 text-center text-neutral-400 text-sm">
                   No se encontraron productos
                 </td>
               </tr>

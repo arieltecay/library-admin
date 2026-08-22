@@ -1,4 +1,5 @@
 import type { DailySummary } from "../../../api/cashShiftsService";
+import { formatPercent } from "../../../lib/profit";
 
 interface CashShiftKPIsProps {
   summary: DailySummary | null;
@@ -46,14 +47,14 @@ function KPISkeleton() {
 export default function CashShiftKPIs({ summary, loading }: CashShiftKPIsProps) {
   if (loading || !summary) {
     return (
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => <KPISkeleton key={i} />)}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <KPISkeleton key={i} />)}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
       <KPICard
         label="Efectivo en Caja"
         value={`$${(summary.finalCount ?? 0).toLocaleString("es-AR")}`}
@@ -76,6 +77,13 @@ export default function CashShiftKPIs({ summary, loading }: CashShiftKPIsProps) 
         icon="account_balance"
         iconColor="bg-blue-500"
         valueClass="text-blue-600"
+      />      <KPICard
+        label="Ganancia Bruta"
+        value={`$${(summary.grossProfit ?? 0).toLocaleString("es-AR")}`}
+        sub={`margen ${formatPercent(summary.grossMarginPercent ?? null)}`}
+        icon="trending_up"
+        iconColor="bg-emerald-500"
+        valueClass={summary.grossProfit < 0 ? "text-red-500" : "text-green-600"}
       />
     </div>
   );

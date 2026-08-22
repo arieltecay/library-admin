@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api/client";
 import { useToast } from "../hooks/useToast";
 import Modal from "./Modal";
+import { unitGrossProfit, unitMarginPercent, formatPercent } from "../lib/profit";
 
 type ProductType = "product" | "service";
 
@@ -9,6 +10,7 @@ interface CreateProductForm {
   name: string;
   type: ProductType;
   price: number;
+  cost?: number;
   stock: number;
   minStock?: number;
 }
@@ -18,9 +20,11 @@ interface CreateProductModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialData?: {
+    id: string;
     name: string;
     type: ProductType;
     price: number;
+    cost?: number;
     stock: number;
     minStock?: number;
   };
@@ -30,6 +34,7 @@ const EMPTY_FORM: CreateProductForm = {
   name: "",
   type: "product",
   price: 0,
+  cost: undefined,
   stock: 0,
   minStock: undefined,
 };
@@ -51,6 +56,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess, initial
           name: initialData.name,
           type: initialData.type,
           price: initialData.price,
+          cost: initialData.cost,
           stock: initialData.stock,
           minStock: initialData.minStock,
         });
@@ -70,16 +76,17 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess, initial
     setSubmitting(true);
     try {
       if (initialData) {
-        // Modo: Actualizar producto existente
-        await api.put(`/products/${initialData.name}`, form);
+        // Modo: Actualizar producto existente usando PATCH con id
+        await api.patch(`/products/${initialData.id}`, form);
       } else {
         await api.post("/products", form);
       }
       success(`Producto "${form.name}" guardado correctamente`);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Error al guardar el producto");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al guardar el producto";
+      showError(message);
     } finally {
       setSubmitting(false);
     }
@@ -128,6 +135,37 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess, initial
             required
           />
         </div>
+
+        <div>
+          <label className="text-sm font-medium text-neutral-700 block mb-1">Costo de compra</label>
+          <input
+            type="number"
+            value={form.cost ?? ""}
+            onChange={(e) => handleChange("cost", e.target.value === "" ? undefined : Number(e.target.value))}
+            min={0}
+            step="0.01"
+            placeholder="0.00"
+            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
+          />
+        </div>
+
+        {form.cost !== undefined && (
+          <div className="mt-2">
+            <p className="text-sm text-neutral-600">
+              Ganancia estimada: <span className="font-semibold">
+                {unitGrossProfit(form.price, form.cost ?? 0).toLocaleString("es-AR")}
+              </span>
+            </p>
+            <p className="text-sm text-neutral-600">
+              Margen estimado: <span className="font-semibold">
+                {formatPercent(unitMarginPercent(form.price, form.cost ?? 0))}
+              </span>
+            </p>
+            {form.price <= form.cost && (
+              <p className="text-amber-600 font-medium">El precio no cubre el costo de compra.</p>
+            )}
+          </div>
+        )}
 
         <div>
           <label className="text-sm font-medium text-neutral-700 block mb-1">Stock <span className="text-danger-500">*</span></label>
