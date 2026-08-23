@@ -1,7 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-const nav = [
+const superAdminNav = [
+  { to: "/admins", label: "Administradores", icon: "manage_accounts" },
+];
+
+const adminNav = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { to: "/products", label: "Productos", icon: "inventory_2" },
   { to: "/sales", label: "Ventas", icon: "receipt_long" },
@@ -9,12 +13,13 @@ const nav = [
   { to: "/credits", label: "Créditos", icon: "account_balance_wallet" },
   { to: "/cash-register", label: "Arqueo de Caja", icon: "account_balance" },
   { to: "/users", label: "Usuarios", icon: "people" },
-  { to: "/schools", label: "Escuelas", icon: "school" },
+  { to: "/pos", label: "POS", icon: "point_of_sale" },
   { to: "/settings", label: "Configuración", icon: "settings" },
 ];
 
 export default function Sidebar() {
-  const { user, logout } = useAuth();
+  const { user, logout, isSuperAdmin } = useAuth();
+  const nav = isSuperAdmin ? superAdminNav : adminNav;
   const initials = user
     ? user.name
         .split(" ")

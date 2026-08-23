@@ -4,8 +4,9 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "seller";
+  role: "superadmin" | "admin" | "seller";
   active: boolean;
+  schoolId?: string;
 }
 
 export interface AuthResponse {
@@ -26,5 +27,10 @@ export async function refreshToken(refreshToken: string): Promise<{ accessToken:
 
 export async function getMe(): Promise<AuthUser> {
   const { data } = await api.get<AuthUser>("/auth/me");
+  return data;
+}
+
+export async function loginWithPin(pin: string, schoolId: string): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>("/auth/login-pin", { pin, schoolId });
   return data;
 }
