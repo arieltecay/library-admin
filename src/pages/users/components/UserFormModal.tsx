@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "../../../components/Modal";
 import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../../api/usersService";
 
@@ -19,6 +19,28 @@ export default function UserFormModal({ isOpen, editUser, onClose, onSave }: Use
     role: editUser?.role ?? "seller" as "admin" | "seller",
     active: editUser?.active ?? true,
   });
+
+  useEffect(() => {
+    if (isOpen && editUser) {
+      setForm({
+        name: editUser.name,
+        email: editUser.email,
+        password: "",
+        pin: "",
+        role: editUser.role,
+        active: editUser.active,
+      });
+    } else if (isOpen && !editUser) {
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        pin: "",
+        role: "seller",
+        active: true,
+      });
+    }
+  }, [isOpen, editUser]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
