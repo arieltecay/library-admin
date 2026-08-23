@@ -107,6 +107,7 @@ export interface SaleItemInfo {
   type: "product" | "service";
   quantity: number;
   unitPrice: number;
+  unitCost?: number;
   subtotal: number;
 }
 
@@ -114,6 +115,7 @@ export interface PopulatedClientInfo {
   id: string;
   fullName: string;
   balance: number;
+  dni?: string;
 }
 
 export interface PopulatedUserInfo {

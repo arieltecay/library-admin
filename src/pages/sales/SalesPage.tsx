@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import {
   listSales,
   getSalesSummary,
+  getSale,
   type ListSalesParams,
   type SalesSummary,
 } from "../../api/sales";
 import type { SaleRow } from "../../api/types";
 import { exportToCSV } from "../../lib/exportToCSV";
 import PageHeader from "../../components/PageHeader";
+import SaleDetailModal from "./components/SaleDetailModal";
 
 function formatMoney(amount: number) {
   return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -97,6 +99,8 @@ export default function SalesPage() {
   const [params, setParams] = useState<ListSalesParams>({ page: 1, limit: 10, sortOrder: "desc", sortBy: "createdAt" });
   const [activeTab, setActiveTab] = useState<"all" | "sale" | "return">("all");
   const [totalCount, setTotalCount] = useState(0);
+  const [detailSale, setDetailSale] = useState<SaleRow | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchSales = useCallback(async () => {
     setLoading(true);
@@ -126,6 +130,20 @@ export default function SalesPage() {
     }
   }, []);
 
+  const openDetail = async (sale: SaleRow) => {
+    setDetailLoading(true);
+    try {
+      const fullSale = await getSale(sale.id);
+      setDetailSale(fullSale);
+    } catch (error) {
+      console.error("Failed to load sale detail", error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetail = () => setDetailSale(null);
+
   useEffect(() => {
     fetchSales();
   }, [fetchSales]);
@@ -154,7 +172,8 @@ export default function SalesPage() {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto space-y-6 pb-24">
+    <>
+      <div className="p-6 max-w-[1400px] mx-auto space-y-6 pb-24">
       {/* Header */}
       <PageHeader 
         title="Historial de ventas" 
@@ -275,7 +294,7 @@ export default function SalesPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-neutral-50 border-b border-neutral-100">
               <tr>
-                {["Comprobante", "Tipo", "Fecha / Hora", "Cliente", "Vendedor", "Método", "Total", ""].map((h, i) => (
+                {["Comprobante", "Tipo", "Fecha / Hora", "Cliente", "Vendedor", "Método", "Total", "Acciones"].map((h, i) => (
                   <th key={i} className="px-5 py-3 text-[11px] font-bold text-neutral-400 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
@@ -286,14 +305,14 @@ export default function SalesPage() {
               {loading ? (
                 [...Array(8)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    {[...Array(8)].map((_, j) => (
+                    {[...Array(9)].map((_, j) => (
                       <td key={j} className="px-5 py-4"><div className="h-4 bg-neutral-100 rounded w-full" /></td>
                     ))}
                   </tr>
                 ))
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-20 text-center text-neutral-400">
+                  <td colSpan={9} className="px-6 py-20 text-center text-neutral-400">
                     No hay ventas que coincidan con los filtros.
                   </td>
                 </tr>
@@ -340,11 +359,21 @@ export default function SalesPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {sale.voided && (
-                          <button className="text-neutral-400 hover:text-neutral-600 transition-colors" title={sale.voidReason || "Venta Anulada"}>
-                            <span className="material-icons text-[18px]">info</span>
+                        <div className="flex items-center justify-end gap-1">
+                          {sale.voided && (
+                            <button className="text-neutral-400 hover:text-neutral-600 transition-colors p-1.5 rounded" title={sale.voidReason || "Venta Anulada"}>
+                              <span className="material-icons text-[18px]">info</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openDetail(sale)}
+                            disabled={detailLoading}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors p-1.5 rounded"
+                            title="Ver ticket"
+                          >
+                            <span className="material-icons text-[20px]">print</span>
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -395,5 +424,7 @@ export default function SalesPage() {
         )}
       </div>
     </div>
+    <SaleDetailModal isOpen={!!detailSale} onClose={closeDetail} sale={detailSale} />
+    </>
   );
 }
