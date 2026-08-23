@@ -75,9 +75,19 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               valueClass="text-neutral-800"
             />
             <Row
-              label="Devoluciones"
-              value={(summary.returns ?? 0) > 0 ? `-$${(summary.returns ?? 0).toLocaleString("es-AR")}` : "$0"}
-              valueClass={(summary.returns ?? 0) > 0 ? "text-red-500" : "text-neutral-600"}
+              label="Entradas movimientos"
+              value={`+$${(summary.cashInTotal ?? 0).toLocaleString("es-AR")}`}
+              valueClass="text-green-600"
+            />
+            <Row
+              label="Salidas movimientos"
+              value={`-$${(summary.cashOutTotal ?? 0).toLocaleString("es-AR")}`}
+              valueClass="text-red-500"
+            />
+            <Row
+              label="Neto movimientos"
+              value={`${(summary.netMovements ?? 0) >= 0 ? "+" : ""}$${(summary.netMovements ?? 0).toLocaleString("es-AR")}`}
+              valueClass={(summary.netMovements ?? 0) >= 0 ? "text-green-600" : "text-red-500"}
             />
             <Row
               label="Pagos créditos"

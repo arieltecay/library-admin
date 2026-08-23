@@ -10,6 +10,7 @@ import { exportToCSV } from "../../lib/exportToCSV";
 import CashShiftKPIs from "./components/CashShiftKPIs";
 import DailySummaryBlock from "./components/DailySummaryBlock";
 import CashMovementsTab from "./components/CashMovementsTab";
+import CashShiftDetailModal from "./components/CashShiftDetailModal";
 
 type TabFilter = "all" | "closed" | "open" | "difference" | "movements";
 
@@ -60,7 +61,7 @@ export default function CashRegisterPage() {
   const [loadingShifts, setLoadingShifts] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [activeTab, setActiveTab] = useState<TabFilter>("closed");
-  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+  const [detailShiftId, setDetailShiftId] = useState<string | null>(null);
   const [params, setParams] = useState<ListCashShiftsParams>({ limit: 50, sortOrder: "desc" });
 
   const fetchData = useCallback(async () => {
@@ -245,13 +246,13 @@ export default function CashRegisterPage() {
                       <DiffCell value={shift.difference} />
                     </td>
                     <td className="px-5 py-4">
-                      <button
-                        onClick={() => setSelectedShiftId(shift.id)}
-                        className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
-                      >
-                        <span className="material-icons text-base">visibility</span>
-                      </button>
-                    </td>
+                        <button
+                          onClick={() => setDetailShiftId(shift.id)}
+                          className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
+                        >
+                          <span className="material-icons text-base">visibility</span>
+                        </button>
+                      </td>
                   </tr>
                 ))
               )}
@@ -269,13 +270,20 @@ export default function CashRegisterPage() {
 
       {/* Movimientos Tab */}
       {activeTab === "movements" && (
-        <CashMovementsTab cashShiftId={selectedShiftId || undefined} />
+        <CashMovementsTab />
       )}
 
       {/* Resumen diario */}
       {summary && activeTab !== "movements" && (
         <DailySummaryBlock summary={summary} loading={loadingSummary} />
       )}
+
+      {/* Modal detalle turno */}
+      <CashShiftDetailModal
+        shiftId={detailShiftId}
+        isOpen={detailShiftId !== null}
+        onClose={() => setDetailShiftId(null)}
+      />
     </div>
   );
 }
