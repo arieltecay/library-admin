@@ -34,11 +34,11 @@ export default function Modal({ isOpen = true, title, onClose, children, size = 
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl w-full mx-4 ${sizes[size]} overflow-hidden`}
+        className={`bg-white rounded-2xl shadow-2xl w-full mx-4 ${sizes[size]} max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between flex-shrink-0">
             <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
             <button
               onClick={onClose}
@@ -51,8 +51,8 @@ export default function Modal({ isOpen = true, title, onClose, children, size = 
             </button>
           </div>
         )}
-        <div className="p-6">{children}</div>
-        {footer && <div className="px-6 py-4 border-t border-neutral-200 bg-neutral-50">{footer}</div>}
+        <div className="p-6 flex-1 overflow-y-auto">{children}</div>
+        {footer && <div className="px-6 py-4 border-t border-neutral-200 bg-neutral-50 flex-shrink-0">{footer}</div>}
       </div>
     </div>
   );

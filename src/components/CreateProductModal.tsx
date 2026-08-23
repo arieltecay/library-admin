@@ -13,6 +13,7 @@ interface CreateProductForm {
   cost?: number;
   stock: number;
   minStock?: number;
+  code?: string;
 }
 
 interface CreateProductModalProps {
@@ -27,6 +28,7 @@ interface CreateProductModalProps {
     cost?: number;
     stock: number;
     minStock?: number;
+    code?: string;
   };
 }
 
@@ -37,6 +39,7 @@ const EMPTY_FORM: CreateProductForm = {
   cost: undefined,
   stock: 0,
   minStock: undefined,
+  code: "",
 };
 
 export default function CreateProductModal({ isOpen, onClose, onSuccess, initialData }: CreateProductModalProps) {
@@ -59,6 +62,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess, initial
           cost: initialData.cost,
           stock: initialData.stock,
           minStock: initialData.minStock,
+          code: initialData.code ?? "",
         });
       } else {
         setForm(EMPTY_FORM);
@@ -105,6 +109,20 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess, initial
             className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
             required
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-neutral-700 block mb-1">Código de producto</label>
+          <input
+            value={form.code ?? ""}
+            onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
+            maxLength={50}
+            placeholder="Ej: PRD-ABC123 o código de barras (opcional)"
+            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
+          />
+          <p className="text-xs text-neutral-500 mt-1">
+            Se auto-genera si queda vacío (formato: PRD-XXXXX / SRV-XXXXX)
+          </p>
         </div>
 
         <div>
