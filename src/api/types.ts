@@ -154,6 +154,7 @@ export interface School {
   id: string;
   name: string;
   code: string;
+  slug: string;
   address?: string;
   phone?: string;
   email?: string;

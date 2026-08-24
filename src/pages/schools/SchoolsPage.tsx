@@ -16,6 +16,40 @@ const SORT_MAP: Record<SortOption, { sortBy: string; sortOrder: "asc" | "desc" }
   "created-desc": { sortBy: "createdAt", sortOrder: "desc" },
 };
 
+function getLoginUrl(slug: string): string {
+  const base = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
+  return `${base}/login?pos_app=${slug}`;
+}
+
+function LoginUrlCell({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const url = getLoginUrl(slug);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-xs text-neutral-600 truncate max-w-[200px]" title={url}>{url}</span>
+      <button
+        onClick={handleCopy}
+        className="p-1.5 rounded-lg text-neutral-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+        aria-label="Copiar URL"
+        title={copied ? "¡Copiado!" : "Copiar URL"}
+      >
+        {copied ? (
+          <span className="material-icons text-sm text-success-600">check</span>
+        ) : (
+          <span className="material-icons text-sm">content_copy</span>
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function SchoolsPage() {
   const [schools, setSchools] = useState<School[]>([]);
   const [total, setTotal] = useState(0);
@@ -136,6 +170,8 @@ export default function SchoolsPage() {
             <tr className="bg-neutral-50 text-xs font-semibold text-neutral-400 uppercase">
               <th className="px-3 py-2 text-left">Escuela</th>
               <th className="px-3 py-2 text-left">Código</th>
+              <th className="px-3 py-2 text-left">Slug POS</th>
+              <th className="px-3 py-2 text-left">URL Login POS</th>
               <th className="px-3 py-2 text-left">Dirección</th>
               <th className="px-3 py-2 text-center">Estado</th>
               <th className="px-3 py-2 text-center">Acciones</th>
@@ -149,6 +185,12 @@ export default function SchoolsPage() {
                 </td>
                 <td className="px-3 py-3">
                   <span className="font-mono text-xs text-neutral-500">{s.code}</span>
+                </td>
+                <td className="px-3 py-3">
+                  <span className="font-mono text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded">{s.slug}</span>
+                </td>
+                <td className="px-3 py-3">
+                  <LoginUrlCell slug={s.slug} />
                 </td>
                 <td className="px-3 py-3 text-neutral-500 text-sm">{s.address || "—"}</td>
                 <td className="px-3 py-3 text-center">
@@ -180,7 +222,7 @@ export default function SchoolsPage() {
             ))}
             {schools.length === 0 && !loading && (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-neutral-400 text-sm">
+                <td colSpan={7} className="py-8 text-center text-neutral-400 text-sm">
                   No se encontraron escuelas
                 </td>
               </tr>
@@ -261,7 +303,7 @@ function PageBtn({ n, current, onClick }: { n: number; current: number; onClick:
 }
 
 function CreateSchoolModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: (data: any) => void }) {
-  const [form, setForm] = useState({ name: "", code: "", address: "", phone: "", email: "" });
+  const [form, setForm] = useState({ name: "", code: "", slug: "", address: "", phone: "", email: "" });
   const { success, error: showError } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -308,6 +350,18 @@ function CreateSchoolModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; on
             className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
             required
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-neutral-700 block mb-1">Slug POS (opcional)</label>
+          <input
+            value={form.slug}
+            onChange={(e) => handleChange("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            maxLength={150}
+            placeholder="Ej: mi-escuela (se autogenera del nombre si se deja vacío)"
+            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
+          />
+          <p className="text-xs text-neutral-500 mt-1">Solo letras minúsculas, números y guiones. Se usa para la URL de login POS: <code className="font-mono">/login?pos_app=slug</code></p>
         </div>
 
         <div>
@@ -364,7 +418,7 @@ function CreateSchoolModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; on
 }
 
 function EditSchoolModal({ school, isOpen, onClose, onSuccess }: { school: School | null; isOpen: boolean; onClose: () => void; onSuccess: (data: any) => void }) {
-  const [form, setForm] = useState({ name: "", code: "", address: "", phone: "", email: "" });
+  const [form, setForm] = useState({ name: "", code: "", slug: "", address: "", phone: "", email: "" });
   const { success, error: showError } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -373,6 +427,7 @@ function EditSchoolModal({ school, isOpen, onClose, onSuccess }: { school: Schoo
       setForm({
         name: school.name,
         code: school.code,
+        slug: school.slug || "",
         address: school.address || "",
         phone: school.phone || "",
         email: school.email || "",
@@ -424,6 +479,17 @@ function EditSchoolModal({ school, isOpen, onClose, onSuccess }: { school: Schoo
             className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
             required
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-neutral-700 block mb-1">Slug POS</label>
+          <input
+            value={form.slug}
+            onChange={(e) => handleChange("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            maxLength={150}
+            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
+          />
+          <p className="text-xs text-neutral-500 mt-1">Solo letras minúsculas, números y guiones. Cambiarlo actualiza la URL de login POS.</p>
         </div>
 
         <div>
