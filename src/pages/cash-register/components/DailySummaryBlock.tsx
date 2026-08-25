@@ -60,6 +60,11 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               valueClass="text-green-600"
             />
             <Row
+              label="Devoluciones"
+              value={`-$${(summary.returns ?? 0).toLocaleString("es-AR")}`}
+              valueClass="text-red-500"
+            />
+            <Row
               label="Costo de venta (COGS)"
               value={`-$${(summary.cogs ?? 0).toLocaleString("es-AR")}`}
               valueClass="text-neutral-600"

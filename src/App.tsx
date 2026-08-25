@@ -13,6 +13,7 @@ import UsuariosPage from "./pages/users/UsersPage";
 import ConfigPage from "./pages/settings/ConfigPage";
 import AdminsPage from "./pages/admins/AdminsPage";
 import PosPage from "./pages/pos/PosPage";
+import SchoolsPage from "./pages/schools/SchoolsPage";
 
 type RouteDef = { path: string; element: ReactNode };
 
@@ -26,6 +27,7 @@ const protectedRoutes: RouteDef[] = [
   { path: "/cash-register", element: <ArqueoPage /> },
   { path: "/users", element: <UsuariosPage /> },
   { path: "/settings", element: <ConfigPage /> },
+  { path: "/schools", element: <SchoolsPage /> },
 ];
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

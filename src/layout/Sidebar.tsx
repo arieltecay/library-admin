@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const superAdminNav = [
   { to: "/admins", label: "Administradores", icon: "manage_accounts" },
+  { to: "/schools", label: "Escuelas", icon: "school" },
 ];
 
 const adminNav = [
