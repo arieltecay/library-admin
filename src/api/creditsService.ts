@@ -51,6 +51,29 @@ export interface SettleDebtPayload {
   note?: string;
 }
 
+export interface SettleDebtResponse {
+  creditMovement: {
+    id: string;
+    client: string;
+    amount: number;
+    balanceAfter: number;
+    method: "cash" | "transfer";
+    note?: string;
+    createdAt: string;
+  };
+  client: {
+    id: string;
+    fullName: string;
+    balance: number;
+  };
+  sale?: { id: string };
+}
+
+export interface SettleDebtApiResponse {
+  message: string;
+  data: SettleDebtResponse;
+}
+
 export async function getCreditsSummary(): Promise<CreditsSummary> {
   const { data } = await api.get("/credits/summary");
   return data;
@@ -74,6 +97,7 @@ export async function getRecentHistory(limit = 5): Promise<RecentMovement[]> {
 export async function settleDebt(
   clientId: string,
   payload: SettleDebtPayload
-): Promise<void> {
-  await api.post(`/credits/client/${clientId}/settle`, payload);
+): Promise<SettleDebtResponse> {
+  const { data } = await api.post<SettleDebtApiResponse>(`/credits/client/${clientId}/settle`, payload);
+  return data.data;
 }
