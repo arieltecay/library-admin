@@ -1,5 +1,4 @@
 import type { DailySummary } from "../../../api/cashShiftsService";
-import { formatPercent } from "../../../lib/profit";
 
 interface DailySummaryBlockProps {
   summary: DailySummary;
@@ -39,7 +38,7 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
 
       {loading ? (
         <div className="p-6 grid grid-cols-2 gap-x-12 animate-pulse">
-          {[...Array(8)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="flex justify-between py-2 border-b border-neutral-100">
               <div className="h-4 bg-neutral-100 rounded w-28" />
               <div className="h-4 bg-neutral-100 rounded w-16" />
@@ -48,7 +47,7 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
         </div>
       ) : (
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-12">
-          {/* Columna izquierda */}
+          {/* Columna izquierda - Arqueo de caja */}
           <div className="divide-y divide-neutral-100">
             <Row
               label="Apertura"
@@ -60,24 +59,9 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               valueClass="text-green-600"
             />
             <Row
-              label="Devoluciones"
+              label="Devoluciones (efectivo)"
               value={`-$${(summary.returns ?? 0).toLocaleString("es-AR")}`}
               valueClass="text-red-500"
-            />
-            <Row
-              label="Costo de venta (COGS)"
-              value={`-$${(summary.cogs ?? 0).toLocaleString("es-AR")}`}
-              valueClass="text-neutral-600"
-            />
-            <Row
-              label="Ganancia bruta"
-              value={`+$${(summary.grossProfit ?? 0).toLocaleString("es-AR")}`}
-              valueClass={(summary.grossProfit ?? 0) < 0 ? "text-red-500" : "text-green-600"}
-            />
-            <Row
-              label="Margen bruto"
-              value={formatPercent(summary.grossMarginPercent ?? null)}
-              valueClass="text-neutral-800"
             />
             <Row
               label="Entradas movimientos"
@@ -100,14 +84,14 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               valueClass={(summary.creditPayments ?? 0) > 0 ? "text-green-600" : "text-neutral-600"}
             />
             <div className="flex items-center justify-between py-3 mt-1">
-              <span className="text-sm font-bold text-neutral-800 uppercase tracking-wide">Total Esperado</span>
+              <span className="text-sm font-bold text-neutral-800 uppercase tracking-wide">Total Operación</span>
               <span className="text-lg font-bold text-blue-600">
                 ${(summary.totalExpected ?? 0).toLocaleString("es-AR")}
               </span>
             </div>
           </div>
 
-          {/* Columna derecha */}
+          {/* Columna derecha - Cierre */}
           <div className="divide-y divide-neutral-100">
             <Row
               label="Conteo final"

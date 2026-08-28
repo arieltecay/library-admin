@@ -36,6 +36,9 @@ export interface CashShiftDetail {
     creditTotal: number;
     salesCount: number;
     returnsTotal: number;
+    returnsCashTotal: number;
+    returnsTransferTotal: number;
+    returnsCreditTotal: number;
   };
   movements: {
     items: Array<{
@@ -54,12 +57,6 @@ export interface CashShiftDetail {
       byCategory: Record<CashMovementCategory, { in: number; out: number; count: number }>;
     };
   };
-  profitability: {
-    revenue: number;
-    cogs: number;
-    grossProfit: number;
-    grossMarginPercent: number | null;
-  };
 }
 
 export interface CashShiftListResult {
@@ -77,19 +74,15 @@ export interface DailySummary {
   transferSales: number;
   returns: number;
   creditPayments: number;
+  cashInTotal: number;
+  cashOutTotal: number;
+  netMovements: number;
   totalExpected: number;
   finalCount: number;
   difference: number;
   shiftsWithDifference: number;
   totalShifts: number;
   pendingShifts: Array<{ sellerName: string; id: string }>;
-  revenue: number;
-  cogs: number;
-  grossProfit: number;
-  grossMarginPercent: number | null;
-  cashInTotal: number;
-  cashOutTotal: number;
-  netMovements: number;
 }
 
 export interface ListCashShiftsParams {
