@@ -23,6 +23,7 @@ function formatDateTime(dateStr: string) {
 
 function PaymentMethodLabel(method: string, type: string) {
   if (type === "return") return "Reintegro";
+  if (type === "credit_note") return "Nota de Crédito";
   const labels: Record<string, string> = {
     cash: "Efectivo",
     transfer: "Transferencia",
@@ -33,6 +34,7 @@ function PaymentMethodLabel(method: string, type: string) {
 
 function PaymentMethodIcon(method: string, type: string) {
   if (type === "return") return "payments";
+  if (type === "credit_note") return "receipt_long";
   const icons: Record<string, string> = {
     cash: "payments",
     transfer: "account_balance",
@@ -100,14 +102,27 @@ export default function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailMod
   if (!sale) return null;
 
   const isReturn = sale.type === "return";
+  const isCreditNote = sale.type === "credit_note";
   const isVoided = sale.voided;
-  const numStr = `#${sale.number.toString().padStart(4, "0")}${isReturn ? "R" : ""}`;
+  const numStr = `#${sale.number.toString().padStart(4, "0")}${isReturn ? "R" : isCreditNote ? "NC" : ""}`;
+
+  const getTitle = () => {
+    if (isCreditNote) return "Detalle de Nota de Crédito";
+    if (isReturn) return "Detalle de Devolución";
+    return "Detalle de Venta";
+  };
+
+  const getComprobanteLabel = () => {
+    if (isCreditNote) return "NOTA DE CRÉDITO";
+    if (isReturn) return "COMPROBANTE DE DEVOLUCIÓN";
+    return "COMPROBANTE DE VENTA";
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isReturn ? "Detalle de Devolución" : "Detalle de Venta"}
+      title={getTitle()}
       size="lg"
       footer={
         <div className="flex items-center justify-end gap-3 no-print">
@@ -140,11 +155,16 @@ export default function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailMod
         {/* Comprobante Info */}
         <div className="center" style={{ marginBottom: "4px" }}>
           <div className="bold" style={{ fontSize: "14px", letterSpacing: "1px" }}>
-            {isReturn ? "NOTA DE CRÉDITO" : "COMPROBANTE DE VENTA"}
+            {getComprobanteLabel()}
           </div>
           <div className="bold" style={{ fontSize: "16px", marginTop: "2px" }}>
             {numStr}
           </div>
+          {isCreditNote && sale.originalSale && (
+            <div className="text-xs text-neutral-500 mt-1">
+              Anula venta #{sale.originalSale.number.toString().padStart(4, "0")}
+            </div>
+          )}
         </div>
 
         <div className="divider" />
@@ -273,6 +293,7 @@ export default function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailMod
           <p>¡Gracias por su compra!</p>
           <p>Conserve este comprobante</p>
           {isReturn && <p>Devolución de venta #{sale.number}</p>}
+          {isCreditNote && sale.originalSale && <p>Anula venta #{sale.originalSale.number.toString().padStart(4, "0")}</p>}
         </div>
       </div>
     </Modal>

@@ -127,7 +127,7 @@ export interface PopulatedUserInfo {
 export type SaleRow = {
   id: string;
   number: number;
-  type: "sale" | "return";
+  type: "sale" | "return" | "credit_note";
   voided: boolean;
   paymentMethod: PaymentMethod;
   subtotal: number;
@@ -140,6 +140,7 @@ export type SaleRow = {
   items: SaleItemInfo[];
   createdAt: string;
   voidReason?: string;
+  originalSale?: { id: string; number: number } | null;
 };
 
 export interface SaleListResult {

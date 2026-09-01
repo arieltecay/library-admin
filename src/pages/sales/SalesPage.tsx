@@ -10,6 +10,7 @@ import type { SaleRow } from "../../api/types";
 import { exportToCSV } from "../../lib/exportToCSV";
 import PageHeader from "../../components/PageHeader";
 import SaleDetailModal from "./components/SaleDetailModal";
+import CreditNoteModal from "./components/CreditNoteModal";
 
 function formatMoney(amount: number) {
   return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -30,6 +31,13 @@ function StatusBadge({ type, voided }: { type: string; voided: boolean }) {
       </span>
     );
   }
+  if (type === "credit_note") {
+    return (
+      <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-blue-100 text-blue-700 tracking-wider">
+        NOTA CRÉDITO
+      </span>
+    );
+  }
   return (
     <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-green-100 text-green-700 tracking-wider">
       VENTA
@@ -43,6 +51,14 @@ function MethodCell({ method, type }: { method: string; type: string }) {
       <span className="flex items-center gap-1.5 text-neutral-700 font-medium">
         <span className="material-icons text-[16px] text-neutral-400">payments</span>
         Reintegro
+      </span>
+    );
+  }
+  if (type === "credit_note") {
+    return (
+      <span className="flex items-center gap-1.5 text-blue-700 font-medium">
+        <span className="material-icons text-[16px]">receipt_long</span>
+        Nota Crédito
       </span>
     );
   }
@@ -97,10 +113,11 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [params, setParams] = useState<ListSalesParams>({ page: 1, limit: 10, sortOrder: "desc", sortBy: "createdAt" });
-  const [activeTab, setActiveTab] = useState<"all" | "sale" | "return">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "sale" | "return" | "credit_note">("all");
   const [totalCount, setTotalCount] = useState(0);
   const [detailSale, setDetailSale] = useState<SaleRow | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [creditNoteSaleData, setCreditNoteSaleData] = useState<SaleRow | null>(null);
 
   const fetchSales = useCallback(async () => {
     setLoading(true);
@@ -144,6 +161,20 @@ export default function SalesPage() {
 
   const closeDetail = () => setDetailSale(null);
 
+  const openCreditNoteModal = (sale: SaleRow) => {
+    setCreditNoteSaleData(sale);
+  };
+
+  const handleCreditNoteSuccess = () => {
+    setCreditNoteSaleData(null);
+    fetchSales();
+    fetchSummary();
+  };
+
+  const closeCreditNoteModal = () => {
+    setCreditNoteSaleData(null);
+  };
+
   useEffect(() => {
     fetchSales();
   }, [fetchSales]);
@@ -153,17 +184,28 @@ export default function SalesPage() {
   }, [fetchSummary]);
 
   const handleExport = () => {
-    const flatSales = sales.map(s => ({
-      Comprobante: `#${s.number.toString().padStart(4, "0")}${s.type === 'return' ? 'R' : ''}`,
-      Tipo: s.type === "return" ? "DEVOLUCIÓN" : "VENTA",
-      Fecha: new Date(s.createdAt).toLocaleString("es-AR"),
-      Cliente: s.client?.fullName || "Consumidor Final",
-      Vendedor: s.seller?.name || "Desconocido",
-      Metodo: s.paymentMethod,
-      Total: s.total,
-      Estado: s.voided ? "ANULADA" : "OK"
-    }));
-    exportToCSV(flatSales, "historial_ventas");
+    const flatSales = sales.map(s => {
+      let typeLabel = "SALE";
+      let receiptNumber = `#${s.number.toString().padStart(4, "0")}`;
+      if (s.type === "return") {
+        typeLabel = "RETURN";
+        receiptNumber += "R";
+      } else if (s.type === "credit_note") {
+        typeLabel = "CREDIT_NOTE";
+        receiptNumber += "NC";
+      }
+      return {
+        ReceiptNumber: receiptNumber,
+        Type: typeLabel,
+        Date: new Date(s.createdAt).toLocaleString("es-AR"),
+        Client: s.client?.fullName || "Consumidor Final",
+        Seller: s.seller?.name || "Desconocido",
+        Method: s.paymentMethod,
+        Total: s.total,
+        Status: s.voided ? "VOIDED" : "OK"
+      };
+    });
+    exportToCSV(flatSales, "sales_history");
   };
 
   const handleClearFilters = () => {
@@ -248,7 +290,8 @@ export default function SalesPage() {
               {[
                 { id: "all", label: "Todos" },
                 { id: "sale", label: "Ventas" },
-                { id: "return", label: "Devoluciones" }
+                { id: "return", label: "Devoluciones" },
+                { id: "credit_note", label: "Notas de crédito" }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -318,14 +361,16 @@ export default function SalesPage() {
                 </tr>
               ) : (
                 sales.map(sale => {
-                  const numStr = `#${sale.number.toString().padStart(4, "0")}${sale.type === 'return' ? 'R' : ''}`;
                   const isReturn = sale.type === "return";
+                  const isCreditNote = sale.type === "credit_note";
+                  const numStr = `#${sale.number.toString().padStart(4, "0")}${isReturn ? 'R' : isCreditNote ? 'NC' : ''}`;
                   const date = new Date(sale.createdAt);
                   const timeStr = date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+                  const canEmitCreditNote = sale.type === "sale" && !sale.voided;
                   
                   return (
                     <tr key={sale.id} className={`hover:bg-neutral-50/60 transition-colors ${sale.voided ? "opacity-60" : ""}`}>
-                      <td className={`px-5 py-4 font-bold ${isReturn ? "text-red-500" : "text-neutral-800"}`}>
+                      <td className={`px-5 py-4 font-bold ${isReturn ? "text-red-500" : isCreditNote ? "text-blue-600" : "text-neutral-800"}`}>
                         <span className={sale.voided ? "line-through text-neutral-400" : ""}>{numStr}</span>
                       </td>
                       <td className="px-5 py-4">
@@ -353,7 +398,7 @@ export default function SalesPage() {
                       <td className="px-5 py-4">
                         <MethodCell method={sale.paymentMethod} type={sale.type} />
                       </td>
-                      <td className={`px-5 py-4 font-bold ${isReturn ? "text-red-500" : "text-neutral-900"}`}>
+                      <td className={`px-5 py-4 font-bold ${isReturn ? "text-red-500" : isCreditNote ? "text-blue-600" : "text-neutral-900"}`}>
                         <span className={sale.voided ? "line-through text-neutral-400" : ""}>
                           {isReturn ? "-" : ""}{formatMoney(sale.total)}
                         </span>
@@ -363,6 +408,15 @@ export default function SalesPage() {
                           {sale.voided && (
                             <button className="text-neutral-400 hover:text-neutral-600 transition-colors p-1.5 rounded" title={sale.voidReason || "Venta Anulada"}>
                               <span className="material-icons text-[18px]">info</span>
+                            </button>
+                          )}
+                          {canEmitCreditNote && (
+                            <button
+                              onClick={() => openCreditNoteModal(sale)}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors p-1.5 rounded"
+                              title="Emitir Nota de Crédito"
+                            >
+                              <span className="material-icons text-[20px]">receipt_long</span>
                             </button>
                           )}
                           <button
@@ -425,6 +479,12 @@ export default function SalesPage() {
       </div>
     </div>
     <SaleDetailModal isOpen={!!detailSale} onClose={closeDetail} sale={detailSale} />
+    <CreditNoteModal
+      isOpen={!!creditNoteSaleData}
+      sale={creditNoteSaleData}
+      onClose={closeCreditNoteModal}
+      onSuccess={handleCreditNoteSuccess}
+    />
     </>
   );
 }

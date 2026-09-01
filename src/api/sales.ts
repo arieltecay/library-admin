@@ -7,7 +7,7 @@ export interface ListSalesParams {
   search?: string;
   sellerId?: string;
   paymentMethod?: "cash" | "transfer" | "credit";
-  type?: "sale" | "return";
+  type?: "sale" | "return" | "credit_note";
   voided?: boolean;
   fromDate?: string;
   toDate?: string;
@@ -41,5 +41,10 @@ export async function voidSale(id: string, reason: string): Promise<SaleRow> {
 
 export async function getSalesSummary(): Promise<SalesSummary> {
   const { data } = await api.get("/sales/summary");
+  return data;
+}
+
+export async function creditNoteSale(id: string, reason?: string): Promise<SaleRow> {
+  const { data } = await api.post(`/sales/${id}/credit-note`, { reason });
   return data;
 }
