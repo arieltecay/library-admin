@@ -25,7 +25,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="p-6">
-        <PageHeader title="Dashboard - Library Admin" showBell />
+        <PageHeader showBell />
         <div className="mt-6 space-y-4">
           <div className="flex gap-4">
             <input type="date" className="px-3 py-2 border border-neutral-300 rounded-lg w-40 bg-neutral-100" disabled />
@@ -51,7 +51,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="p-6">
-        <PageHeader title="Dashboard - Library Admin" showBell />
+        <PageHeader showBell />
         <p className="mt-4 text-sm text-danger-600">{error}</p>
       </div>
     );
@@ -59,11 +59,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader
-        title="Dashboard - Library Admin"
-        subtitle="Dashboard / Resumen general"
-        showBell
-      />
+      <PageHeader showBell />
 
       <div className="flex items-center gap-4">
         <label className="text-sm text-neutral-600">Desde</label>
@@ -121,6 +117,7 @@ export default function DashboardPage() {
             <CreditSummary
               totalOutstanding={data?.credit.totalOutstanding ?? 0}
               clientsWithDebt={data?.credit.clientsWithDebt ?? 0}
+              clients={data?.credit.clients ?? []}
             />
           </div>
         </div>

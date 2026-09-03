@@ -35,9 +35,16 @@ export interface LowStockListProps {
   items: { id: string; name: string; stock: number; minStock?: number }[];
 }
 
+export interface ClientDebt {
+  id: string;
+  fullName: string;
+  balance: number;
+}
+
 export interface CreditSummaryProps {
   totalOutstanding: number;
   clientsWithDebt: number;
+  clients: ClientDebt[];
 }
 
 export interface SkeletonKpiProps {}

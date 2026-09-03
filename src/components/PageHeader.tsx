@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 interface PageHeaderProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   description?: string;
   searchPlaceholder?: string;
@@ -39,10 +39,12 @@ export default function PageHeader({
   return (
     <div className="bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 min-w-0">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold text-neutral-900">{title}</h1>
-          {subtitle && <p className="text-sm text-neutral-500 mt-0.5">{subtitle}</p>}
-        </div>
+        {title && (
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-neutral-900">{title}</h1>
+            {subtitle && <p className="text-sm text-neutral-500 mt-0.5">{subtitle}</p>}
+          </div>
+        )}
         {onSearchChange !== undefined && (
           <div className="relative">
             <span className="material-icons text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 text-base">search</span>
