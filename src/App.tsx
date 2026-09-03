@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
 import Layout from "./layout/Layout";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/dashboard";
 import ProductsPage from "./pages/products/ProductsPage";
 import SalesPage from "./pages/sales/SalesPage";
 import ClientesPage from "./pages/clients/ClientsPage";
