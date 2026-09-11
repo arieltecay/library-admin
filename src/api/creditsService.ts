@@ -53,6 +53,19 @@ export interface CreditMovementItem {
   method?: "cash" | "transfer" | "credit";
   note?: string;
   createdAt: string;
+  sale?: {
+    id: string;
+    number: number;
+    items: Array<{
+      name: string;
+      type: "product" | "service";
+      quantity: number;
+      unitPrice: number;
+      subtotal: number;
+    }>;
+    total: number;
+    createdAt: string;
+  } | null;
 }
 
 export interface ClientCreditResult {
