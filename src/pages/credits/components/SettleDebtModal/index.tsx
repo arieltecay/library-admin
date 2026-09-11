@@ -1,34 +1,26 @@
-import { useState } from "react";
-import Modal from "../../../components/Modal";
-import type { SettleDebtPayload } from "../../../api/creditsService";
+import { useState } from 'react';
+import Modal from '../../../../components/Modal';
+import type { SettleDebtModalProps } from './types';
 
-interface SettleDebtModalProps {
-  isOpen: boolean;
-  clientName: string;
-  currentDebt: number;
-  onClose: () => void;
-  onConfirm: (payload: SettleDebtPayload) => Promise<void>;
-}
-
-export default function SettleDebtModal({
+export const SettleDebtModal = ({
   isOpen,
   clientName,
   currentDebt,
   onClose,
   onConfirm,
-}: SettleDebtModalProps) {
+}: SettleDebtModalProps) => {
   const [amount, setAmount] = useState<string>(currentDebt.toFixed(2));
-  const [method, setMethod] = useState<"cash" | "transfer">("cash");
-  const [note, setNote] = useState("");
+  const [method, setMethod] = useState<'cash' | 'transfer'>('cash');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
-      setError("Ingresá un monto válido mayor a $0");
+      setError('Ingresá un monto válido mayor a $0');
       return;
     }
     if (numAmount > currentDebt) {
@@ -40,7 +32,7 @@ export default function SettleDebtModal({
       await onConfirm({ amount: numAmount, method, note: note || undefined });
       onClose();
     } catch {
-      setError("Error al procesar el pago. Intentá de nuevo.");
+      setError('Error al procesar el pago. Intentá de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -79,7 +71,6 @@ export default function SettleDebtModal({
       }
     >
       <form id="settle-form" onSubmit={handleSubmit} className="space-y-4">
-        {/* Resumen de deuda */}
         <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center text-red-600">
             <span className="material-icons text-base">account_balance_wallet</span>
@@ -91,7 +82,6 @@ export default function SettleDebtModal({
           </div>
         </div>
 
-        {/* Monto */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1.5">Monto a pagar</label>
           <div className="relative">
@@ -109,31 +99,29 @@ export default function SettleDebtModal({
           </div>
         </div>
 
-        {/* Método */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1.5">Método de pago</label>
           <div className="flex gap-3">
-            {(["cash", "transfer"] as const).map(m => (
+            {(['cash', 'transfer'] as const).map(m => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMethod(m)}
                 className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
                   method === m
-                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                    : "bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50"
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50'
                 }`}
               >
                 <span className="material-icons text-sm mr-1 align-text-bottom">
-                  {m === "cash" ? "payments" : "swap_horiz"}
+                  {m === 'cash' ? 'payments' : 'swap_horiz'}
                 </span>
-                {m === "cash" ? "Efectivo" : "Transferencia"}
+                {m === 'cash' ? 'Efectivo' : 'Transferencia'}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Nota */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1.5">Nota (opcional)</label>
           <input
@@ -153,4 +141,4 @@ export default function SettleDebtModal({
       </form>
     </Modal>
   );
-}
+};

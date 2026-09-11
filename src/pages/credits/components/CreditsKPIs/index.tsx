@@ -1,25 +1,6 @@
-import type { CreditsSummary } from "../../../api/creditsService";
+import type { CreditsKPIsProps, KPICardProps } from './types';
 
-interface CreditsKPIsProps {
-  summary: CreditsSummary | null;
-  loading: boolean;
-}
-
-function KPICard({
-  label,
-  value,
-  sub,
-  icon,
-  iconBg,
-  valueClass = "text-neutral-900",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: string;
-  iconBg: string;
-  valueClass?: string;
-}) {
+const KPICard = ({ label, value, sub, icon, iconBg, valueClass = 'text-neutral-900' }: KPICardProps) => {
   return (
     <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-sm flex flex-col gap-3">
       <div className="flex items-start justify-between">
@@ -36,9 +17,9 @@ function KPICard({
       </div>
     </div>
   );
-}
+};
 
-function KPICardSkeleton() {
+const KPICardSkeleton = () => {
   return (
     <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-sm animate-pulse">
       <div className="flex items-start justify-between mb-3">
@@ -49,9 +30,9 @@ function KPICardSkeleton() {
       <div className="h-3 bg-neutral-100 rounded w-20" />
     </div>
   );
-}
+};
 
-export default function CreditsKPIs({ summary, loading }: CreditsKPIsProps) {
+export const CreditsKPIs = ({ summary, loading }: CreditsKPIsProps) => {
   if (loading || !summary) {
     return (
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -66,8 +47,8 @@ export default function CreditsKPIs({ summary, loading }: CreditsKPIsProps) {
     <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
       <KPICard
         label="Deuda Total"
-        value={`$${summary.totalOutstanding.toLocaleString("es-AR")}`}
-        sub={`$${summary.totalPaymentsThisMonth.toLocaleString("es-AR")} cobrado`}
+        value={`$${summary.totalOutstanding.toLocaleString('es-AR')}`}
+        sub={`$${summary.totalPaymentsThisMonth.toLocaleString('es-AR')} cobrado`}
         icon="account_balance_wallet"
         iconBg="bg-amber-400"
       />
@@ -80,20 +61,20 @@ export default function CreditsKPIs({ summary, loading }: CreditsKPIsProps) {
       />
       <KPICard
         label="Vencidos +30 Días"
-        value={`$${summary.overdueAmount.toLocaleString("es-AR")}`}
-        sub={`${summary.overdueCount} ${summary.overdueCount === 1 ? "cliente" : "clientes"}`}
+        value={`$${summary.overdueAmount.toLocaleString('es-AR')}`}
+        sub={`${summary.overdueCount} ${summary.overdueCount === 1 ? 'cliente' : 'clientes'}`}
         icon="event_busy"
         iconBg="bg-red-500"
         valueClass="text-red-600"
       />
       <KPICard
         label="Cobrado este Mes"
-        value={`$${summary.totalPaymentsThisMonth.toLocaleString("es-AR")}`}
-        sub={`${summary.totalCreditsThisMonth > 0 ? `$${summary.totalCreditsThisMonth.toLocaleString("es-AR")} en créditos` : "Sin créditos este mes"}`}
+        value={`$${summary.totalPaymentsThisMonth.toLocaleString('es-AR')}`}
+        sub={`${summary.totalCreditsThisMonth > 0 ? `$${summary.totalCreditsThisMonth.toLocaleString('es-AR')} en créditos` : 'Sin créditos este mes'}`}
         icon="check_circle"
         iconBg="bg-green-500"
         valueClass="text-green-600"
       />
     </div>
   );
-}
+};

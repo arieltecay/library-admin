@@ -45,6 +45,30 @@ export interface RecentMovement {
   createdAt: string;
 }
 
+export interface CreditMovementItem {
+  id: string;
+  type: "debt" | "payment";
+  amount: number;
+  balanceAfter: number;
+  method?: "cash" | "transfer" | "credit";
+  note?: string;
+  createdAt: string;
+}
+
+export interface ClientCreditResult {
+  client: {
+    id: string;
+    fullName: string;
+    dni?: string;
+    balance: number;
+  };
+  movements: CreditMovementItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface SettleDebtPayload {
   amount: number;
   method: "cash" | "transfer";
@@ -91,6 +115,14 @@ export async function listCredits(params?: {
 
 export async function getRecentHistory(limit = 5): Promise<RecentMovement[]> {
   const { data } = await api.get("/credits/history", { params: { limit } });
+  return data;
+}
+
+export async function getClientCredit(
+  clientId: string,
+  params?: { page?: number; limit?: number }
+): Promise<ClientCreditResult> {
+  const { data } = await api.get(`/credits/client/${clientId}`, { params });
   return data;
 }
 
