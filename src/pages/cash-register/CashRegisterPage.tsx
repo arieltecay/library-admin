@@ -5,12 +5,13 @@ import {
   type CashShiftItem,
   type DailySummary,
   type ListCashShiftsParams,
-} from "../../api/cashShiftsService";
+} from "../../api/cashShifts";
 import { exportToCSV } from "../../lib/exportToCSV";
 import CashShiftKPIs from "./components/CashShiftKPIs";
 import DailySummaryBlock from "./components/DailySummaryBlock";
 import CashMovementsTab from "./components/CashMovementsTab";
 import CashShiftDetailModal from "./components/CashShiftDetailModal";
+import CloseShiftModal from "./components/CloseShiftModal";
 
 type TabFilter = "all" | "closed" | "open" | "difference" | "movements";
 
@@ -62,6 +63,7 @@ export default function CashRegisterPage() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [activeTab, setActiveTab] = useState<TabFilter>("closed");
   const [detailShiftId, setDetailShiftId] = useState<string | null>(null);
+  const [closeTarget, setCloseTarget] = useState<CashShiftItem | null>(null);
   const [params, setParams] = useState<ListCashShiftsParams>({ limit: 50, sortOrder: "desc" });
 
   const fetchData = useCallback(async () => {
@@ -246,13 +248,23 @@ export default function CashRegisterPage() {
                       <DiffCell value={shift.difference} />
                     </td>
                     <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-1">
+                        {shift.status === "open" && (
+                          <button
+                            onClick={() => setCloseTarget(shift)}
+                            className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                          >
+                            Cerrar turno
+                          </button>
+                        )}
                         <button
                           onClick={() => setDetailShiftId(shift.id)}
                           className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
                         >
                           <span className="material-icons text-base">visibility</span>
                         </button>
-                      </td>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -275,7 +287,11 @@ export default function CashRegisterPage() {
 
       {/* Resumen diario */}
       {summary && activeTab !== "movements" && (
-        <DailySummaryBlock summary={summary} loading={loadingSummary} />
+        <DailySummaryBlock
+          summary={summary}
+          loading={loadingSummary}
+          onCloseShift={(shiftId, sellerName) => setCloseTarget({ id: shiftId, sellerName, status: "open", shiftNumber: 0, openedAt: "", openingAmount: 0 } as CashShiftItem)}
+        />
       )}
 
       {/* Modal detalle turno */}
@@ -283,6 +299,15 @@ export default function CashRegisterPage() {
         shiftId={detailShiftId}
         isOpen={detailShiftId !== null}
         onClose={() => setDetailShiftId(null)}
+      />
+
+      {/* Modal cierre de turno (admin puede cerrar cualquier turno abierto) */}
+      <CloseShiftModal
+        shiftId={closeTarget?.id ?? null}
+        sellerName={closeTarget?.sellerName}
+        expectedAmount={closeTarget?.expectedAmount}
+        onClose={() => setCloseTarget(null)}
+        onClosed={() => void fetchData()}
       />
     </div>
   );

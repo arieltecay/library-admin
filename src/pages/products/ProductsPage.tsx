@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
-import api from "../../api/client";
 import PageHeader from "../../components/PageHeader";
 import Modal from "../../components/Modal";
 import CreateProductModal from "../../components/CreateProductModal";
 import { money } from "../../lib/format";
 import { unitMarginPercent, formatPercent } from "../../lib/profit";
-import type { Product, ProductListResponse } from "../../api/types";
+import { listProducts, getProductCounts, deleteProduct } from "../../api/products";
+import type { Product } from "../../api/products";
 
 type TypeFilter = "all" | "product" | "service";
 type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "stock-asc" | "stock-desc";
@@ -52,14 +52,10 @@ export default function ProductsPage() {
   // Fetch summary counts - reusable function
   const fetchSummaryCounts = useCallback(async () => {
     try {
-      const [productsRes, servicesRes, lowStockRes] = await Promise.all([
-        api.get("/products", { params: { active: true, type: "product", limit: 1 } }),
-        api.get("/products", { params: { active: true, type: "service", limit: 1 } }),
-        api.get("/products", { params: { active: true, lowStock: true, limit: 1 } }),
-      ]);
-      setProductCount(productsRes.data.total);
-      setServiceCount(servicesRes.data.total);
-      setLowStockCount(lowStockRes.data.total);
+      const { productCount, serviceCount, lowStockCount } = await getProductCounts();
+      setProductCount(productCount);
+      setServiceCount(serviceCount);
+      setLowStockCount(lowStockCount);
     } catch {
       setProductCount(0);
       setServiceCount(0);
@@ -87,13 +83,12 @@ export default function ProductsPage() {
     let cancelled = false;
     const timer = setTimeout(() => {
       setLoading(true);
-      api
-        .get("/products", { params })
-        .then((r: { data: ProductListResponse }) => {
+      listProducts(params)
+        .then((data) => {
           if (!cancelled) {
-            setProducts(r.data.items);
-            setTotal(r.data.total);
-            setTotalPages(r.data.totalPages);
+            setProducts(data.items);
+            setTotal(data.total);
+            setTotalPages(data.totalPages);
             setLoading(false);
           }
         })
@@ -130,7 +125,7 @@ export default function ProductsPage() {
 
   async function handleDelete(product: Product) {
     try {
-      await api.delete(`/products/${product.id}`);
+      await deleteProduct(product.id);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
       setTotal((prev) => prev - 1);
       setSelected((prev) => {

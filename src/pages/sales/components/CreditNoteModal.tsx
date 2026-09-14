@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal from "../../../components/Modal";
 import { creditNoteSale } from "../../../api/sales";
-import type { SaleRow } from "../../../api/types";
+import type { SaleRow } from "../../../api/sales";
 import { money } from "../../../lib/format";
 
 interface CreditNoteModalProps {

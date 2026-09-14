@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getSettings, updateSettings, type Settings } from "../../api/settingsService";
+import { getSettings, updateSettings, type Settings } from "../../api/settings";
 
 export default function ConfigPage() {
   const [settings, setSettings] = useState<Settings | null>(null);

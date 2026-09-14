@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../components/Modal";
-import type { CashMovementCategory } from "../../../api/cashMovementsService";
-import type { CashMovementType } from "../../../api/cashMovementsService";
-import { getCashShiftDetail, type CashShiftDetail } from "../../../api/cashShiftsService";
+import type { CashMovementCategory } from "../../../api/cashMovements";
+import type { CashMovementType } from "../../../api/cashMovements";
+import { getCashShiftDetail, type CashShiftDetail } from "../../../api/cashShifts";
 
 function CategoryBadge({ category }: { category: CashMovementCategory }) {
   const labels: Record<CashMovementCategory, { label: string; color: string }> = {

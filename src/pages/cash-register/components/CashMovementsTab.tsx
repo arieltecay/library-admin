@@ -7,7 +7,7 @@ import {
   type ListCashMovementsParams,
   type CashMovementCategory,
   type CashMovementType,
-} from "../../../api/cashMovementsService";
+} from "../../../api/cashMovements";
 import { exportToCSV } from "../../../lib/exportToCSV";
 
 type TabFilter = "all" | "in" | "out";

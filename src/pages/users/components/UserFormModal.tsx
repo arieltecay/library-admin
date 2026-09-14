@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "../../../components/Modal";
-import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../../api/usersService";
+import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../../api/users";
 
 interface UserFormModalProps {
   isOpen: boolean;

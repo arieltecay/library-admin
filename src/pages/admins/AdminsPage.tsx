@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { adminsService, type Admin, type CreateAdminPayload, type UpdateAdminPayload } from "../../api/adminsService";
+import { adminsService, type Admin, type CreateAdminPayload, type UpdateAdminPayload } from "../../api/admins";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function AdminsPage() {

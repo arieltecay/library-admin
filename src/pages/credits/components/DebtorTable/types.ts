@@ -1,4 +1,4 @@
-import type { DebtorItem } from '../../../../api/creditsService';
+import type { DebtorItem } from '../../../../api/credits';
 
 export interface DebtorTableProps {
   debtors: DebtorItem[];

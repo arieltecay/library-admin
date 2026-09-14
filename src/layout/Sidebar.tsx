@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 const superAdminNav = [
   { to: "/admins", label: "Administradores", icon: "manage_accounts" },
   { to: "/schools", label: "Escuelas", icon: "school" },
+  { to: "/bots", label: "Bots de ventas", icon: "smart_toy" },
 ];
 
 const adminNav = [
@@ -15,6 +16,7 @@ const adminNav = [
   { to: "/cash-register", label: "Arqueo de Caja", icon: "account_balance" },
   { to: "/users", label: "Usuarios", icon: "people" },
   { to: "/pos", label: "POS", icon: "point_of_sale" },
+  { to: "/bot", label: "Bot de ventas", icon: "smart_toy" },
   { to: "/settings", label: "Configuración", icon: "settings" },
 ];
 
@@ -49,6 +51,7 @@ export default function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === "/bot"}
             className={({ isActive }) =>
               `flex items-center gap-3 mx-3 my-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive

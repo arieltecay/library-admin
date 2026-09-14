@@ -1,4 +1,4 @@
-import type { CreditMovementItem } from '../../../api/creditsService';
+import type { CreditMovementItem } from '../../../api/credits';
 
 export const formatMoney = (amount: number): string => `$${amount.toFixed(2)}`;
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import api from "../../api/client";
 import PageHeader from "../../components/PageHeader";
 import Modal from "../../components/Modal";
-import { useToast } from "../../hooks/useToast";
-import type { School, SchoolListResponse } from "../../api/types";
+import { useToast } from "../../components/Toast/useToast";
+import { listSchools, createSchool, updateSchool, deleteSchool } from "../../api/schools";
+import type { School } from "../../api/schools";
 
 type SortOption = "name-asc" | "name-desc" | "code-asc" | "code-desc" | "created-asc" | "created-desc";
 
@@ -76,13 +76,12 @@ export default function SchoolsPage() {
     let cancelled = false;
     const timer = setTimeout(() => {
       setLoading(true);
-      api
-        .get("/schools", { params })
-        .then((r: { data: SchoolListResponse }) => {
+      listSchools(params)
+        .then((data) => {
           if (!cancelled) {
-            setSchools(r.data.items);
-            setTotal(r.data.total);
-            setTotalPages(r.data.totalPages);
+            setSchools(data.items);
+            setTotal(data.total);
+            setTotalPages(data.totalPages);
             setLoading(false);
           }
         })
@@ -105,7 +104,7 @@ export default function SchoolsPage() {
 
   async function handleDelete(school: School) {
     try {
-      await api.delete(`/schools/${school.id}`);
+      await deleteSchool(school.id);
       setSchools((prev) => prev.filter((s) => s.id !== school.id));
       setTotal((prev) => prev - 1);
       success(`Escuela "${school.name}" eliminada`);
@@ -118,8 +117,7 @@ export default function SchoolsPage() {
 
   function handleSchoolSubmit(data: { name: string; code: string; address?: string; phone?: string; email?: string }) {
     if (editTarget) {
-      api
-        .patch(`/schools/${editTarget.id}`, data)
+      updateSchool(editTarget.id, data)
         .then(() => {
           success(`Escuela "${data.name}" actualizada`);
           setPage(1);
@@ -127,8 +125,7 @@ export default function SchoolsPage() {
         })
         .catch((err: any) => showError(err.response?.data?.message || "Error al actualizar"));
     } else {
-      api
-        .post("/schools", data)
+      createSchool(data)
         .then(() => {
           success(`Escuela "${data.name}" creada`);
           setPage(1);
@@ -314,7 +311,7 @@ function CreateSchoolModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; on
   async function handleSubmit() {
     setSubmitting(true);
     try {
-      await api.post("/schools", form);
+      await createSchool(form);
       success(`Escuela "${form.name}" creada correctamente`);
       onSuccess(form);
       onClose();
@@ -443,7 +440,7 @@ function EditSchoolModal({ school, isOpen, onClose, onSuccess }: { school: Schoo
     if (!school) return;
     setSubmitting(true);
     try {
-      await api.patch(`/schools/${school.id}`, form);
+      await updateSchool(school.id, form);
       success(`Escuela "${form.name}" actualizada correctamente`);
       onSuccess(form);
       onClose();

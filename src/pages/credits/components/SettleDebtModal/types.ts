@@ -1,4 +1,4 @@
-import type { SettleDebtPayload } from '../../../../api/creditsService';
+import type { SettleDebtPayload } from '../../../../api/credits';
 
 export interface SettleDebtModalProps {
   isOpen: boolean;

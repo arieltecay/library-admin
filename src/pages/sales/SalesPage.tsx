@@ -6,7 +6,7 @@ import {
   type ListSalesParams,
   type SalesSummary,
 } from "../../api/sales";
-import type { SaleRow } from "../../api/types";
+import type { SaleRow } from "../../api/sales";
 import { exportToCSV } from "../../lib/exportToCSV";
 import PageHeader from "../../components/PageHeader";
 import SaleDetailModal from "./components/SaleDetailModal";
@@ -393,7 +393,14 @@ export default function SalesPage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-neutral-600 font-medium">
-                        {sale.seller?.name || "Desconocido"}
+                        <div className="flex items-center gap-1.5">
+                          {sale.seller?.name || "Desconocido"}
+                          {sale.source === "bot" && (
+                            <span className="px-1.5 py-0.5 bg-violet-100 text-violet-700 text-[9px] font-bold uppercase rounded tracking-wider" title="Venta generada por el bot">
+                              BOT
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-4">
                         <MethodCell method={sale.paymentMethod} type={sale.type} />

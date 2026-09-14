@@ -1,4 +1,4 @@
-import type { RecentMovement } from '../../../../api/creditsService';
+import type { RecentMovement } from '../../../../api/credits';
 import type { RecentHistoryPanelProps } from './types';
 
 const getMovementColor = (movement: RecentMovement): string => {

@@ -1,4 +1,4 @@
-import type { DailySummary } from "../../../api/cashShiftsService";
+import type { DailySummary } from "../../../api/cashShifts";
 
 interface CashShiftKPIsProps {
   summary: DailySummary | null;

@@ -7,7 +7,7 @@ import {
   type CreditsSummary,
   type DebtorItem,
   type RecentMovement,
-} from '../../api/creditsService';
+} from '../../api/credits';
 import { exportToCSV } from '../../lib/exportToCSV';
 import { getDaysSince } from './components/Badges';
 import {

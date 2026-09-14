@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { posService, type Pos, type CreatePosPayload, type UpdatePosPayload } from "../../api/posService";
+import { posService, type Pos, type CreatePosPayload, type UpdatePosPayload } from "../../api/pos";
 
 export default function PosPage() {
   const [posList, setPosList] = useState<Pos[]>([]);

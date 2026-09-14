@@ -1,4 +1,4 @@
-import type { CreditsSummary } from '../../../../api/creditsService';
+import type { CreditsSummary } from '../../../../api/credits';
 
 export interface CreditsKPIsProps {
   summary: CreditsSummary | null;

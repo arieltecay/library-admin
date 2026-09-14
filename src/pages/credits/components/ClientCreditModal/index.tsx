@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from '../../../../components/Modal';
 import { PrintButton } from '../../../../components/PrintButton';
-import { getClientCredit, type CreditMovementItem } from '../../../../api/creditsService';
+import { getClientCredit, type CreditMovementItem } from '../../../../api/credits';
 import {
   formatDate,
   formatMoney,

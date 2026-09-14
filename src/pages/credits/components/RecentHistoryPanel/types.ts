@@ -1,4 +1,4 @@
-import type { RecentMovement } from '../../../../api/creditsService';
+import type { RecentMovement } from '../../../../api/credits';
 
 export interface RecentHistoryPanelProps {
   movements: RecentMovement[];

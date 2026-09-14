@@ -1,8 +1,9 @@
-import type { DailySummary } from "../../../api/cashShiftsService";
+import type { DailySummary } from "../../../api/cashShifts";
 
 interface DailySummaryBlockProps {
   summary: DailySummary;
   loading: boolean;
+  onCloseShift?: (shiftId: string, sellerName: string) => void;
 }
 
 function Row({ label, value, valueClass = "text-neutral-800" }: { label: string; value: string; valueClass?: string }) {
@@ -14,7 +15,7 @@ function Row({ label, value, valueClass = "text-neutral-800" }: { label: string;
   );
 }
 
-export default function DailySummaryBlock({ summary, loading }: DailySummaryBlockProps) {
+export default function DailySummaryBlock({ summary, loading, onCloseShift }: DailySummaryBlockProps) {
   const dateLabel = summary?.date
     ? new Date(summary.date + "T00:00:00").toLocaleDateString("es-AR", {
         day: "2-digit",
@@ -94,11 +95,23 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
           {/* Columna derecha - Cierre */}
           <div className="divide-y divide-neutral-100">
             <Row
-              label="Conteo final"
+              label="Conteo final (turnos cerrados)"
               value={`$${(summary.finalCount ?? 0).toLocaleString("es-AR")}`}
             />
+            {(summary.inheritedOpening ?? 0) > 0 && (
+              <Row
+                label="Apertura de turnos heredados (no es plata de hoy)"
+                value={`-$${(summary.inheritedOpening ?? 0).toLocaleString("es-AR")}`}
+                valueClass="text-neutral-500"
+              />
+            )}
             <Row
-              label="Diferencia"
+              label="En caja, pendiente de conteo"
+              value={`$${(summary.salesInOpenShifts ?? 0).toLocaleString("es-AR")}`}
+              valueClass={(summary.salesInOpenShifts ?? 0) > 0 ? "text-amber-600" : "text-neutral-800"}
+            />
+            <Row
+              label="Diferencia real"
               value={
                 hasDiff
                   ? `${(summary.difference ?? 0) > 0 ? "+" : ""}$${(summary.difference ?? 0).toLocaleString("es-AR")}`
@@ -111,14 +124,30 @@ export default function DailySummaryBlock({ summary, loading }: DailySummaryBloc
               value={`${(summary.shiftsWithDifference ?? 0)} de ${(summary.totalShifts ?? 0)}`}
               valueClass={(summary.shiftsWithDifference ?? 0) > 0 ? "text-amber-600" : "text-neutral-800"}
             />
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm text-neutral-600">Turnos pendientes</span>
+            <div className="py-2">
+              <span className="text-sm text-neutral-600">Turnos pendientes de cierre</span>
               {hasPending ? (
-                <span className="text-sm font-semibold text-amber-600">
-                  {summary.pendingShifts.length} ({summary.pendingShifts.map(p => p.sellerName).join(", ")})
-                </span>
+                <div className="mt-2 space-y-1.5">
+                  {summary.pendingShifts.map(p => (
+                    <div key={p.id} className="flex items-center justify-between gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      <span className="text-sm font-medium text-amber-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                        {p.sellerName}
+                      </span>
+                      {onCloseShift && (
+                        <button
+                          type="button"
+                          onClick={() => onCloseShift(p.id, p.sellerName)}
+                          className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+                        >
+                          Cerrar turno
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
+                <span className="block text-sm font-semibold text-green-600 flex items-center gap-1 mt-1">
                   <span className="material-icons text-base">check_circle</span> Ninguno
                 </span>
               )}

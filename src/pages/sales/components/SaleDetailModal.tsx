@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import Modal from "../../../components/Modal";
-import type { SaleRow } from "../../../api/types";
+import type { SaleRow } from "../../../api/sales";
 import { money } from "../../../lib/format";
 
 interface SaleDetailModalProps {

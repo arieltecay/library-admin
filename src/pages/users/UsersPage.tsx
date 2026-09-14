@@ -8,7 +8,7 @@ import {
   type UserItem,
   type UsersSummary,
   type ListUsersParams,
-} from "../../api/usersService";
+} from "../../api/users";
 import UserFormModal from "./components/UserFormModal";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

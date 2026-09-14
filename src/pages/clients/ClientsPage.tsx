@@ -4,7 +4,7 @@ import { DataTable, type ColumnDef } from "../../components/DataTable";
 import Modal from "../../components/Modal";
 import { exportToCSV } from "../../lib/exportToCSV";
 import { listClients, type ListClientsParams } from "../../api/clients";
-import type { Client } from "../../api/types";
+import type { Client } from "../../api/clients";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
