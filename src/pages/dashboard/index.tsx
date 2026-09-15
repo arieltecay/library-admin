@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
 import PageHeader from '../../components/PageHeader';
 import { money } from '../../lib/format';
 import { formatPercent } from '../../lib/profit';
 import { useDashboard } from './hooks';
 import {
   KpiCard,
-  BarChart,
   PaymentMethodBreakdown,
   ProfitabilityCard,
   TopProductsTable,
@@ -19,8 +17,6 @@ import {
 
 export default function DashboardPage() {
   const { from, setFrom, to, setTo, data, loading, error, empty } = useDashboard();
-
-  const maxSeries = useMemo(() => Math.max(...(data?.series.total ?? [0]), 1), [data?.series.total]);
 
   if (loading) {
     return (
@@ -85,27 +81,18 @@ export default function DashboardPage() {
       )}
 
       {!empty && (
-        <div className="grid grid-cols-3 gap-6">
-          <BarChart
-            labels={data?.series.labels ?? []}
-            values={data?.series.total ?? []}
-            maxValue={maxSeries}
-            title="VENTAS POR DÍA"
-            className="col-span-2"
+        <div className="grid grid-cols-2 gap-6">
+          <PaymentMethodBreakdown
+            cash={data?.sales.cash ?? 0}
+            transfer={data?.sales.transfer ?? 0}
+            credit={data?.sales.credit ?? 0}
           />
-          <div className="flex flex-col gap-6">
-            <PaymentMethodBreakdown
-              cash={data?.sales.cash ?? 0}
-              transfer={data?.sales.transfer ?? 0}
-              credit={data?.sales.credit ?? 0}
-            />
-            <ProfitabilityCard
-              revenue={data?.profitability.revenue ?? 0}
-              cogs={data?.profitability.cogs ?? 0}
-              grossProfit={data?.profitability.grossProfit ?? 0}
-              grossMarginPercent={data?.profitability.grossMarginPercent ?? null}
-            />
-          </div>
+          <ProfitabilityCard
+            revenue={data?.profitability.revenue ?? 0}
+            cogs={data?.profitability.cogs ?? 0}
+            grossProfit={data?.profitability.grossProfit ?? 0}
+            grossMarginPercent={data?.profitability.grossMarginPercent ?? null}
+          />
         </div>
       )}
 
