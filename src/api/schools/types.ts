@@ -28,4 +28,12 @@ export interface CreateSchoolPayload {
   email?: string;
 }
 
-export interface UpdateSchoolPayload extends CreateSchoolPayload {}
+export interface UpdateSchoolPayload {
+  name?: string;
+  code?: string;
+  slug?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  active?: boolean;
+}

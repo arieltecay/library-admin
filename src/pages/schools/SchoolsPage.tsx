@@ -63,6 +63,7 @@ export default function SchoolsPage() {
   const [deleteTarget, setDeleteTarget] = useState<School | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<School | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const { success, error: showError } = useToast();
 
   useEffect(() => {
@@ -112,6 +113,22 @@ export default function SchoolsPage() {
       showError(err.response?.data?.message || "Error al eliminar la escuela");
     } finally {
       setDeleteTarget(null);
+    }
+  }
+
+  async function handleToggleActive(school: School) {
+    if (togglingId) return;
+    setTogglingId(school.id);
+    try {
+      await updateSchool(school.id, { active: !school.active });
+      setSchools((prev) =>
+        prev.map((s) => (s.id === school.id ? { ...s, active: !school.active } : s))
+      );
+      success(`Escuela "${school.name}" ${!school.active ? "activada" : "desactivada"}`);
+    } catch (err: any) {
+      showError(err.response?.data?.message || "Error al actualizar el estado");
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -191,11 +208,23 @@ export default function SchoolsPage() {
                 </td>
                 <td className="px-3 py-3 text-neutral-500 text-sm">{s.address || "—"}</td>
                 <td className="px-3 py-3 text-center">
-                  <span className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${
-                    s.active ? "bg-success-100 text-success-700" : "bg-neutral-100 text-neutral-500"
-                  }`}>
-                    {s.active ? "ACTIVA" : "INACTIVA"}
-                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={s.active}
+                    aria-label={`${s.active ? "Desactivar" : "Activar"} ${s.name}`}
+                    disabled={!!togglingId}
+                    onClick={() => handleToggleActive(s)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      s.active ? "bg-success-600" : "bg-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                        s.active ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </td>
                 <td className="px-3 py-3 text-center">
                   <button
