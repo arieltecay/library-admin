@@ -94,7 +94,7 @@ function PosLoginUrlCell({ slug }: { slug: string }) {
 function getPosLoginUrl(slug: string): string {
   const base = import.meta.env.VITE_POS_BASE_URL || import.meta.env.VITE_API_BASE_URL || window.location.origin;
   if (!import.meta.env.VITE_POS_BASE_URL && import.meta.env.PROD) {
-    console.warn('VITE_POS_BASE_URL not set in production, using fallback');
+    console.error('VITE_POS_BASE_URL is not configured in production. POS login URLs will be incorrect. Please set VITE_POS_BASE_URL in your Vercel frontend project settings.');
   }
   return `${base}/login?pos_app=${encodeURIComponent(slug)}`;
 }
