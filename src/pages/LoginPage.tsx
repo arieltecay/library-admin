@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { DisabledScreen } from "../components/shared/DisabledScreen";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -12,20 +13,54 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showDisabledScreen, setShowDisabledScreen] = useState(false);
+  const [disabledVariant, setDisabledVariant] = useState<'admin' | 'pos'>('admin');
+  const [disabledMessage, setDisabledMessage] = useState("");
+
+  function extractErrorInfo(err: unknown): { code?: string; message: string } {
+    if (err && typeof err === 'object' && 'response' in err) {
+      const response = (err as { response?: { data?: { error?: string; message?: string } } }).response;
+      if (response?.data) {
+        return {
+          code: response.data.error,
+          message: response.data.message || 'Error al iniciar sesión',
+        };
+      }
+    }
+    if (err instanceof Error) return { message: err.message };
+    return { message: 'Error al iniciar sesión' };
+  }
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!email || !password) return;
     setLoading(true);
     setError("");
+    setShowDisabledScreen(false);
     try {
       await login(email, password);
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Error al iniciar sesión");
+    } catch (err) {
+      const { code, message } = extractErrorInfo(err);
+      if (code === 'SCHOOL_DISABLED' || code === 'POS_DISABLED') {
+        setDisabledVariant(code === 'SCHOOL_DISABLED' ? 'admin' : 'pos');
+        setDisabledMessage(message);
+        setShowDisabledScreen(true);
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  if (showDisabledScreen) {
+    return (
+      <DisabledScreen
+        variant={disabledVariant}
+        message={disabledMessage}
+      />
+    );
   }
 
   return (
