@@ -1,569 +1,201 @@
-import { useEffect, useState } from "react";
-import PageHeader from "../../components/PageHeader";
-import Modal from "../../components/Modal";
-import { useToast } from "../../components/Toast/useToast";
-import { listSchools, createSchool, updateSchool, deleteSchool } from "../../api/schools";
-import type { School } from "../../api/schools";
-
-type SortOption = "name-asc" | "name-desc" | "code-asc" | "code-desc" | "created-asc" | "created-desc";
-
-const SORT_MAP: Record<SortOption, { sortBy: string; sortOrder: "asc" | "desc" }> = {
-  "name-asc": { sortBy: "name", sortOrder: "asc" },
-  "name-desc": { sortBy: "name", sortOrder: "desc" },
-  "code-asc": { sortBy: "code", sortOrder: "asc" },
-  "code-desc": { sortBy: "code", sortOrder: "desc" },
-  "created-asc": { sortBy: "createdAt", sortOrder: "asc" },
-  "created-desc": { sortBy: "createdAt", sortOrder: "desc" },
-};
-
-function getLoginUrl(slug: string): string {
-  const base = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
-  return `${base}/login?pos_app=${slug}`;
-}
-
-function LoginUrlCell({ slug }: { slug: string }) {
-  const [copied, setCopied] = useState(false);
-  const url = getLoginUrl(slug);
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-xs text-neutral-600 truncate max-w-[200px]" title={url}>{url}</span>
-      <button
-        onClick={handleCopy}
-        className="p-1.5 rounded-lg text-neutral-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-        aria-label="Copiar URL"
-        title={copied ? "¡Copiado!" : "Copiar URL"}
-      >
-        {copied ? (
-          <span className="material-icons text-sm text-success-600">check</span>
-        ) : (
-          <span className="material-icons text-sm">content_copy</span>
-        )}
-      </button>
-    </div>
-  );
-}
+import { useState, useRef } from 'react';
+import { useToast } from '../../components/Toast/useToast';
+import { useSchools } from './hooks/useSchools';
+import { SchoolFormModal } from './components/SchoolFormModal';
+import { ConfirmModal } from './components/ConfirmModal';
+import { SchoolsTable } from './components/SchoolsTable';
+import type { School } from './types';
 
 export default function SchoolsPage() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
-  const [sort] = useState<SortOption>("name-asc");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<School | null>(null);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<School | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
   const { success, error: showError } = useToast();
+  const {
+    schools,
+    total,
+    loading,
+    error,
+    page,
+    setPage,
+    search,
+    setSearch,
+    limit,
+    createSchool,
+    updateSchool,
+    toggleActive,
+    deleteSchool,
+    togglingId,
+  } = useSchools();
 
-  useEffect(() => {
-    const params: Record<string, unknown> = {
-      page,
-      limit,
-      ...SORT_MAP[sort],
-    };
-    if (search.trim()) params.search = search.trim();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const editingSchoolRef = useRef<School | null>(null);
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    school: School | null;
+    action: 'delete';
+  }>({ isOpen: false, school: null, action: 'delete' });
 
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      setLoading(true);
-      listSchools(params)
-        .then((data) => {
-          if (!cancelled) {
-            setSchools(data.items);
-            setTotal(data.total);
-            setTotalPages(data.totalPages);
-            setLoading(false);
-          }
-        })
-        .catch((err) => {
-          if (!cancelled) {
-            setError(err.response?.data?.message || "Error cargando escuelas");
-            setLoading(false);
-          }
-        });
-    }, 300);
+  const handleToggleActive = async (id: string, active: boolean) => {
+    try {
+      await toggleActive(id, active);
+      success(`Escuela ${active ? 'activada' : 'desactivada'}`);
+    } catch (err: any) {
+      showError(err?.response?.data?.message ?? 'Error al cambiar estado');
+    }
+  };
 
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [page, limit, search, sort]);
+  const handleDeleteClick = (school: School) => {
+    setConfirmState({
+      isOpen: true,
+      school,
+      action: 'delete',
+    });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmState.school) return;
+    try {
+      if (confirmState.action === 'delete') {
+        await deleteSchool(confirmState.school.id);
+        success('Escuela eliminada');
+      }
+    } catch (err: any) {
+      showError(err?.response?.data?.message ?? 'Error al eliminar');
+    } finally {
+      setConfirmState({ isOpen: false, school: null, action: 'delete' });
+    }
+  };
+
+  const handleCancel = () => {
+    setConfirmState({ isOpen: false, school: null, action: 'delete' });
+  };
+
+  const handleEditClick = (school: School) => {
+    editingSchoolRef.current = school;
+    setEditingSchool(school);
+    setShowEditModal(true);
+  };
+
+  const handleCreate = async (data: any) => {
+    try {
+      await createSchool(data);
+      success('Escuela creada');
+      setShowCreateModal(false);
+    } catch (err: any) {
+      showError(err?.response?.data?.message ?? 'Error al crear');
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    const school = editingSchoolRef.current;
+    if (!school) return;
+    try {
+      await updateSchool(school.id, data);
+      success('Escuela actualizada');
+      setShowEditModal(false);
+      editingSchoolRef.current = null;
+      setEditingSchool(null);
+    } catch (err: any) {
+      showError(err?.response?.data?.message ?? 'Error al actualizar');
+    }
+  };
 
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
-
-  async function handleDelete(school: School) {
-    try {
-      await deleteSchool(school.id);
-      setSchools((prev) => prev.filter((s) => s.id !== school.id));
-      setTotal((prev) => prev - 1);
-      success(`Escuela "${school.name}" eliminada`);
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Error al eliminar la escuela");
-    } finally {
-      setDeleteTarget(null);
-    }
-  }
-
-  async function handleToggleActive(school: School) {
-    if (togglingId) return;
-    setTogglingId(school.id);
-    try {
-      await updateSchool(school.id, { active: !school.active });
-      setSchools((prev) =>
-        prev.map((s) => (s.id === school.id ? { ...s, active: !school.active } : s))
-      );
-      success(`Escuela "${school.name}" ${!school.active ? "activada" : "desactivada"}`);
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Error al actualizar el estado");
-    } finally {
-      setTogglingId(null);
-    }
-  }
-
-  function handleSchoolSubmit(data: { name: string; code: string; address?: string; phone?: string; email?: string }) {
-    if (editTarget) {
-      updateSchool(editTarget.id, data)
-        .then(() => {
-          success(`Escuela "${data.name}" actualizada`);
-          setPage(1);
-          setEditTarget(null);
-        })
-        .catch((err: any) => showError(err.response?.data?.message || "Error al actualizar"));
-    } else {
-      createSchool(data)
-        .then(() => {
-          success(`Escuela "${data.name}" creada`);
-          setPage(1);
-          setCreateModalOpen(false);
-        })
-        .catch((err: any) => showError(err.response?.data?.message || "Error al crear"));
-    }
-  }
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader
-        title="Escuelas"
-        subtitle={`Gestión de escuelas - ${total} registradas`}
-        searchPlaceholder="Buscar escuela... (/)"
-        searchValue={search}
-        onSearchChange={setSearch}
-        primaryAction={{ label: "Nueva escuela", icon: "add", onClick: () => setCreateModalOpen(true) }}
-      />
-
-      {error && <p className="text-sm text-danger-600">{error}</p>}
-
-      <CreateSchoolModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSuccess={handleSchoolSubmit}
-      />
-
-      <EditSchoolModal
-        school={editTarget}
-        isOpen={!!editTarget}
-        onClose={() => setEditTarget(null)}
-        onSuccess={handleSchoolSubmit}
-      />
-
-      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 text-xs font-semibold text-neutral-400 uppercase">
-              <th className="px-3 py-2 text-left">Escuela</th>
-              <th className="px-3 py-2 text-left">Código</th>
-              <th className="px-3 py-2 text-left">Slug POS</th>
-              <th className="px-3 py-2 text-left">URL Login POS</th>
-              <th className="px-3 py-2 text-left">Dirección</th>
-              <th className="px-3 py-2 text-center">Estado</th>
-              <th className="px-3 py-2 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {schools.map((s) => (
-              <tr key={s.id} className="hover:bg-neutral-50">
-                <td className="px-3 py-3">
-                  <div className="font-medium text-neutral-900">{s.name}</div>
-                </td>
-                <td className="px-3 py-3">
-                  <span className="font-mono text-xs text-neutral-500">{s.code}</span>
-                </td>
-                <td className="px-3 py-3">
-                  <span className="font-mono text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded">{s.slug}</span>
-                </td>
-                <td className="px-3 py-3">
-                  <LoginUrlCell slug={s.slug} />
-                </td>
-                <td className="px-3 py-3 text-neutral-500 text-sm">{s.address || "—"}</td>
-                <td className="px-3 py-3 text-center">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={s.active}
-                    aria-label={`${s.active ? "Desactivar" : "Activar"} ${s.name}`}
-                    disabled={!!togglingId}
-                    onClick={() => handleToggleActive(s)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      s.active ? "bg-success-600" : "bg-neutral-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                        s.active ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </td>
-                <td className="px-3 py-3 text-center">
-                  <button
-                    onClick={() => setEditTarget(s)}
-                    className="text-neutral-400 hover:text-primary-600 p-1 rounded-lg hover:bg-primary-50"
-                    aria-label={`Editar ${s.name}`}
-                    title="Editar"
-                  >
-                    <span className="material-icons text-sm">edit</span>
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget(s)}
-                    className="ml-1 text-neutral-400 hover:text-danger-600 hover:bg-danger-50 p-1 rounded-lg"
-                    aria-label={`Eliminar ${s.name}`}
-                    title="Eliminar"
-                  >
-                    <span className="material-icons text-sm">delete</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {schools.length === 0 && !loading && (
-              <tr>
-                <td colSpan={7} className="py-8 text-center text-neutral-400 text-sm">
-                  No se encontraron escuelas
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900">Escuelas</h1>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+        >
+          <span className="material-icons">add</span>
+          Nueva Escuela
+        </button>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-neutral-600">
-        <div className="flex items-center gap-2">
-          <span>Mostrando {from}-{to} de {total}</span>
-          <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-neutral-300 rounded px-1.5 py-0.5 text-sm">
-            {[10, 20, 50].map((n) => <option key={n} value={n}>{n} por página</option>)}
-          </select>
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg" role="alert">
+          {error}
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1 || loading}
-            className="px-2.5 py-1 rounded border border-neutral-300 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className="material-icons text-sm">chevron_left</span>
-          </button>
-          {Array.from({ length: totalPages }).map((_, i) => {
-            const n = i + 1;
-            if (totalPages > 7 && n < page - 2) return n === 1 ? <PageBtn key={n} n={n} current={page} onClick={() => setPage(n)} /> : null;
-            if (totalPages > 7 && n > page + 2) return n === totalPages ? <PageBtn key={n} n={n} current={page} onClick={() => setPage(n)} /> : null;
-            if (totalPages > 7 && n === page - 2) return <span key="start-ellipsis" className="px-1">…</span>;
-            if (totalPages > 7 && n === page + 2 && n !== totalPages) return <span key="end-ellipsis" className="px-1">…</span>;
-            return <PageBtn key={n} n={n} current={page} onClick={() => setPage(n)} />;
-          })}
-          <button
-            onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages || loading}
-            className="px-2.5 py-1 rounded border border-neutral-300 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className="material-icons text-sm">chevron_right</span>
-          </button>
-        </div>
-      </div>
-
-      {deleteTarget && (
-        <Modal title="Confirmar eliminación" onClose={() => setDeleteTarget(null)}>
-          <div className="space-y-4">
-            <p className="text-sm text-neutral-600">
-              ¿Estás seguro de eliminar la escuela <span className="font-semibold">"{deleteTarget.name}"</span>?
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-lg border border-neutral-300 text-neutral-700 font-medium hover:bg-neutral-50">
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="flex-1 py-2.5 rounded-lg bg-danger-600 text-white font-medium hover:bg-danger-700"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </Modal>
       )}
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar escuela... (/)"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Buscar escuelas"
+          className="w-full max-w-md px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
+      <SchoolsTable
+        schools={schools}
+        loading={loading}
+        togglingId={togglingId}
+        onToggle={handleToggleActive}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+      />
+
+      {total > limit && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-neutral-600">
+            Mostrando {from}-{to} de {total}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 border border-neutral-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <span className="text-sm font-medium text-neutral-700">
+              Página {page} de {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+              className="px-3 py-1 border border-neutral-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
+
+      <SchoolFormModal
+        isOpen={showCreateModal}
+        school={null}
+        onClose={() => setShowCreateModal(false)}
+        onCreate={handleCreate}
+      />
+
+      <SchoolFormModal
+        isOpen={showEditModal}
+        school={editingSchool}
+        onClose={() => { setShowEditModal(false); setEditingSchool(null); editingSchoolRef.current = null; }}
+        onUpdate={handleUpdate}
+      />
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title="Confirmar eliminación"
+        message={confirmState.school
+          ? `¿Estás seguro de eliminar la escuela "${confirmState.school.name}"? Esta acción no se puede deshacer.`
+          : '¿Estás seguro?'}
+        variant="danger"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+      />
     </div>
-  );
-}
-
-function PageBtn({ n, current, onClick }: { n: number; current: number; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
-        n === current ? "bg-primary-600 text-white border-primary-600" : "border-neutral-300 text-neutral-600 hover:bg-neutral-100"
-      }`}
-    >
-      {n}
-    </button>
-  );
-}
-
-function CreateSchoolModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: (data: any) => void }) {
-  const [form, setForm] = useState({ name: "", code: "", slug: "", address: "", phone: "", email: "" });
-  const { success, error: showError } = useToast();
-  const [submitting, setSubmitting] = useState(false);
-
-  function handleChange(field: string, value: string) {
-    setForm({ ...form, [field]: value });
-  }
-
-  async function handleSubmit() {
-    setSubmitting(true);
-    try {
-      await createSchool(form);
-      success(`Escuela "${form.name}" creada correctamente`);
-      onSuccess(form);
-      onClose();
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Error al crear la escuela");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <Modal title="Crear escuela" isOpen={isOpen} onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Nombre <span className="text-danger-500">*</span></label>
-          <input
-            value={form.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            maxLength={100}
-            placeholder="Ej: Escuela Primaria N° 1"
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Código <span className="text-danger-500">*</span></label>
-          <input
-            value={form.code}
-            onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
-            maxLength={20}
-            placeholder="Ej: EP1"
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Slug POS (opcional)</label>
-          <input
-            value={form.slug}
-            onChange={(e) => handleChange("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-            maxLength={150}
-            placeholder="Ej: mi-escuela (se autogenera del nombre si se deja vacío)"
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-          />
-          <p className="text-xs text-neutral-500 mt-1">Solo letras minúsculas, números y guiones. Se usa para la URL de login POS: <code className="font-mono">/login?pos_app=slug</code></p>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Dirección</label>
-          <input
-            value={form.address}
-            onChange={(e) => handleChange("address", e.target.value)}
-            maxLength={200}
-            placeholder="Ej: Av. Siempre Viva 123"
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-neutral-700 block mb-1">Teléfono</label>
-            <input
-              value={form.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              maxLength={30}
-              placeholder="Ej: 11 1234-5678"
-              className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-neutral-700 block mb-1">Email</label>
-            <input
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              maxLength={150}
-              placeholder="ejemplo@escuela.edu"
-              className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-neutral-200">
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className={`w-full py-3.5 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 ${
-              submitting ? "opacity-80 cursor-not-allowed" : ""
-            }`}
-          >
-            {submitting ? "Guardando..." : "Crear escuela"}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M19 13l3-3m0 0l-3-3m3 3H3" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-function EditSchoolModal({ school, isOpen, onClose, onSuccess }: { school: School | null; isOpen: boolean; onClose: () => void; onSuccess: (data: any) => void }) {
-  const [form, setForm] = useState({ name: "", code: "", slug: "", address: "", phone: "", email: "" });
-  const { success, error: showError } = useToast();
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (school) {
-      setForm({
-        name: school.name,
-        code: school.code,
-        slug: school.slug || "",
-        address: school.address || "",
-        phone: school.phone || "",
-        email: school.email || "",
-      });
-    }
-  }, [school]);
-
-  function handleChange(field: string, value: string) {
-    setForm({ ...form, [field]: value });
-  }
-
-  async function handleSubmit() {
-    if (!school) return;
-    setSubmitting(true);
-    try {
-      await updateSchool(school.id, form);
-      success(`Escuela "${form.name}" actualizada correctamente`);
-      onSuccess(form);
-      onClose();
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Error al actualizar la escuela");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (!school) return null;
-
-  return (
-    <Modal title="Editar escuela" isOpen={isOpen} onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Nombre <span className="text-danger-500">*</span></label>
-          <input
-            value={form.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            maxLength={100}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Código <span className="text-danger-500">*</span></label>
-          <input
-            value={form.code}
-            onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
-            maxLength={20}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Slug POS</label>
-          <input
-            value={form.slug}
-            onChange={(e) => handleChange("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-            maxLength={150}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-          />
-          <p className="text-xs text-neutral-500 mt-1">Solo letras minúsculas, números y guiones. Cambiarlo actualiza la URL de login POS.</p>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-neutral-700 block mb-1">Dirección</label>
-          <input
-            value={form.address}
-            onChange={(e) => handleChange("address", e.target.value)}
-            maxLength={200}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-neutral-700 block mb-1">Teléfono</label>
-            <input
-              value={form.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              maxLength={30}
-              className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-neutral-700 block mb-1">Email</label>
-            <input
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              maxLength={150}
-              className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:border-primary-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-neutral-200">
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className={`w-full py-3.5 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 ${
-              submitting ? "opacity-80 cursor-not-allowed" : ""
-            }`}
-          >
-            {submitting ? "Guardando..." : "Actualizar escuela"}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M19 13l3-3m0 0l-3-3m3 3H3" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </Modal>
   );
 }
